@@ -1,0 +1,444 @@
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+
+#topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-chrome);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(1rem, 2.2vw, 1.6rem) var(--pad-x);
+  mix-blend-mode: normal;
+  opacity: 0;
+  translate: 0 -12px;
+  transition: opacity 0.8s var(--ease-out) 0.15s, translate 0.8s var(--ease-out) 0.15s;
+}
+body[data-booting='false'] #topbar {
+  opacity: 1;
+  translate: 0 0;
+}
+#topbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(5, 6, 10, 0.82), transparent);
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
+  pointer-events: none;
+}
+
+.topbar__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  justify-self: start;
+}
+.topbar__glyph {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--line-lit);
+  border-radius: 50%;
+  font: 700 0.62rem/1 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--ember);
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.topbar__mark:hover .topbar__glyph {
+  background: var(--ember);
+  color: var(--ink-000);
+}
+.topbar__name {
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bone-200);
+}
+
+.topbar__mid {
+  justify-self: center;
+  color: var(--mute-100);
+  text-align: center;
+  white-space: nowrap;
+}
+.topbar__mid b {
+  color: var(--bone-100);
+}
+
+.topbar__cmd {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--mute-100);
+  transition: border-color var(--dur-fast), color var(--dur-fast);
+}
+.topbar__cmd:hover {
+  border-color: var(--line-lit);
+  color: var(--bone-100);
+}
+.topbar__cmd span {
+  padding-left: 0.2rem;
+}
+
+/* Three items in one row is one too many on a phone. The mark and the palette
+   trigger survive; the section label is already on the rail-free HUD. */
+@media (max-width: 620px) {
+  #topbar {
+    grid-template-columns: 1fr auto;
+  }
+  .topbar__name,
+  .topbar__mid {
+    display: none;
+  }
+  .topbar__cmd span {
+    display: none;
+  }
+}
+
+/* ============================================================
+   RAIL — vertical section nav
+   ============================================================ */
+
+#rail {
+  position: fixed;
+  right: clamp(0.7rem, 1.6vw, 1.5rem);
+  top: 50%;
+  translate: 0 -50%;
+  z-index: var(--z-chrome);
+  display: grid;
+  gap: 0.1rem;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-out) 0.4s;
+}
+body[data-booting='false'] #rail {
+  opacity: 1;
+}
+
+.rail__item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.28rem 0;
+  color: var(--mute-200);
+}
+.rail__label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0;
+  translate: 6px 0;
+  transition: opacity var(--dur-fast) var(--ease-out), translate var(--dur-fast) var(--ease-out);
+}
+.rail__tick {
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: currentColor;
+  transition: width var(--dur) var(--ease-out), background var(--dur-fast);
+}
+.rail__item:hover,
+.rail__item:focus-visible {
+  color: var(--bone-100);
+}
+.rail__item:hover .rail__label {
+  opacity: 1;
+  translate: 0 0;
+}
+.rail__item[aria-current='true'] {
+  color: var(--ember);
+}
+.rail__item[aria-current='true'] .rail__tick {
+  width: 34px;
+}
+.rail__item[aria-current='true'] .rail__label {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@media (max-width: 720px) {
+  #rail {
+    display: none;
+  }
+}
+
+/* ============================================================
+   HUD — the honest performance readout
+   ============================================================ */
+
+#hud {
+  position: fixed;
+  left: var(--pad-x);
+  bottom: clamp(0.9rem, 2vw, 1.5rem);
+  z-index: var(--z-chrome);
+  display: grid;
+  gap: 0.15rem;
+  color: var(--mute-200);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-out) 0.55s;
+  pointer-events: auto;
+}
+body[data-booting='false'] #hud {
+  opacity: 1;
+}
+.hud__row {
+  display: grid;
+  grid-template-columns: 5.4rem auto;
+}
+.hud__row b {
+  color: var(--bone-200);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+#hud[data-strained='true'] #hud-fps {
+  color: var(--ember);
+}
+.hud__quiet {
+  margin-top: 0.35rem;
+  justify-self: start;
+  font: inherit;
+  color: var(--mute-200);
+  border-bottom: 1px solid transparent;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+.hud__quiet:hover {
+  color: var(--ember);
+  border-color: var(--line-lit);
+}
+.hud__quiet[aria-pressed='true'] {
+  color: var(--signal);
+}
+
+@media (max-width: 620px) {
+  #hud {
+    display: none;
+  }
+}
+
+/* ============================================================
+   PROGRESS
+   ============================================================ */
+
+#progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: var(--z-overlay);
+  background: var(--line-soft);
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-out) 0.5s;
+}
+body[data-booting='false'] #progress {
+  opacity: 1;
+}
+#progress i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--ember-deep), var(--ember), var(--ember-lit));
+  box-shadow: 0 0 12px color-mix(in oklab, var(--ember) 60%, transparent);
+}
+
+/* ============================================================
+   CURSOR
+   ============================================================ */
+
+#cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-cursor);
+  pointer-events: none;
+  mix-blend-mode: difference;
+  opacity: 0;
+  transition: opacity var(--dur-fast);
+}
+#cursor.is-live {
+  opacity: 1;
+}
+#cursor i,
+#cursor b {
+  position: absolute;
+  border-radius: 50%;
+  translate: -50% -50%;
+}
+#cursor i {
+  width: 5px;
+  height: 5px;
+  background: var(--bone-100);
+}
+#cursor b {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--bone-200);
+  transition: width var(--dur-fast) var(--ease-out), height var(--dur-fast) var(--ease-out), opacity var(--dur-fast);
+}
+#cursor[data-mode='link'] b {
+  width: 52px;
+  height: 52px;
+}
+#cursor[data-mode='drag'] b {
+  width: 68px;
+  height: 68px;
+  opacity: 0.55;
+}
+
+@media (hover: none), (pointer: coarse) {
+  #cursor {
+    display: none;
+  }
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+
+#boot {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-boot);
+  display: grid;
+  place-items: center;
+  gap: 2rem;
+  padding: var(--pad-x);
+  background: var(--ink-000);
+  transition: opacity 1s var(--ease-out), visibility 1s;
+}
+body[data-booting='false'] #boot {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.boot__inner {
+  width: min(30rem, 100%);
+  display: grid;
+  gap: 1.1rem;
+}
+.boot__mark {
+  color: var(--ember);
+  font-size: var(--step--1);
+  letter-spacing: 0.3em;
+}
+.boot__log {
+  display: grid;
+  gap: 0.32rem;
+  min-height: 7.5rem;
+  align-content: start;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--mute-200);
+}
+.boot__log li {
+  display: flex;
+  gap: 0.6rem;
+  opacity: 0;
+  animation: bootline 0.45s var(--ease-out) forwards;
+}
+.boot__log li::before {
+  content: '›';
+  color: var(--ember);
+  opacity: 0.6;
+}
+.boot__log li[data-done='true'] {
+  color: var(--bone-300);
+}
+.boot__log li em {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--mute-100);
+}
+@keyframes bootline {
+  from {
+    opacity: 0;
+    translate: -6px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.boot__bar {
+  height: 1px;
+  background: var(--line);
+  overflow: hidden;
+}
+.boot__bar i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: var(--ember);
+  transition: width 0.4s var(--ease-out);
+}
+.boot__meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--mute-200);
+  font-size: 0.66rem;
+}
+
+.boot__enter {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+  padding: 1.1rem 2.4rem;
+  border: 1px solid var(--line-lit);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--ember) 8%, transparent);
+  animation: bootline 0.6s var(--ease-out) forwards;
+  transition: background var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+.boot__enter:hover {
+  background: color-mix(in oklab, var(--ember) 20%, transparent);
+  box-shadow: 0 0 60px -10px color-mix(in oklab, var(--ember) 70%, transparent);
+}
+.boot__enter-label {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.boot__enter-hint {
+  color: var(--mute-100);
+  font-size: 0.64rem;
+}
+
+/* The ⌘K shell — overlay, screen, prompt, output — lives in term.css. */
+
+/* ============================================================
+   Scrollbar
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 9px;
+}
+::-webkit-scrollbar-track {
+  background: var(--ink-000);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink-400);
+  border-radius: 99px;
+  border: 3px solid var(--ink-000);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ember-deep);
+}

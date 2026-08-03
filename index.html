@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Ali Tarraf — Senior Software Engineer</title>
+    <meta
+      name="description"
+      content="Ali Tarraf — Senior Software Engineer. Frontend architecture for multi-tenant SaaS platforms serving over a million users. React, Next.js, Vue, Nuxt, TypeScript."
+    />
+    <meta name="theme-color" content="#08090c" />
+    <meta name="author" content="Ali Tarraf" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ali Tarraf — Senior Software Engineer" />
+    <meta
+      property="og:description"
+      content="Frontend architecture for multi-tenant SaaS. One million particles, one per user shipped to."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body data-booting="true">
+    <a class="skip" href="#work">Skip to work history</a>
+
+    <!-- The field. Fixed, full-bleed, behind everything. -->
+    <canvas id="field" aria-hidden="true"></canvas>
+    <div class="atmos" aria-hidden="true"></div>
+
+    <!-- Boot sequence: real work happens behind this, not a fake progress bar. -->
+    <div id="boot" aria-live="polite">
+      <div class="boot__inner">
+        <div class="boot__mark mono">ali.tarraf</div>
+        <ol class="boot__log" id="boot-log"></ol>
+        <div class="boot__bar"><i id="boot-bar"></i></div>
+        <div class="boot__meta mono"><span id="boot-pct">0%</span><span id="boot-note">initialising</span></div>
+      </div>
+      <button id="boot-enter" class="boot__enter" hidden>
+        <span class="boot__enter-label">Enter the field</span>
+        <span class="boot__enter-hint mono">1,048,576 particles standing by</span>
+      </button>
+    </div>
+
+    <!-- Fixed chrome -->
+    <header id="topbar">
+      <a class="topbar__mark" href="#hero" aria-label="Ali Tarraf, back to top">
+        <span class="topbar__glyph">AT</span>
+        <span class="topbar__name">Ali Tarraf</span>
+      </a>
+      <div class="topbar__mid mono" id="section-label">00 / Top</div>
+      <button class="topbar__cmd mono" id="cmd-open" aria-haspopup="dialog">
+        <kbd>⌘</kbd><kbd>K</kbd><span>Terminal</span>
+      </button>
+    </header>
+
+    <nav id="rail" aria-label="Section navigation"></nav>
+
+    <div id="hud" class="mono" aria-hidden="true">
+      <div class="hud__row"><span>particles</span><b id="hud-count">—</b></div>
+      <div class="hud__row"><span>frame</span><b id="hud-fps">—</b></div>
+      <div class="hud__row"><span>formation</span><b id="hud-form">—</b></div>
+      <button id="hud-quiet" class="hud__quiet">reduce motion</button>
+    </div>
+
+    <div id="progress" aria-hidden="true"><i></i></div>
+
+    <!-- The shell. ⌘K takes the whole screen; `exit` is the way out. -->
+    <div id="cmd" role="dialog" aria-modal="true" aria-label="Terminal" hidden>
+      <div class="cmd__sheet">
+        <div class="term__head">
+          <span class="term__title mono">ali@field — the field 1.0</span>
+          <span class="term__badge mono" id="term-exit"><b>exit</b> to close</span>
+        </div>
+
+        <!-- Log and prompt share one scroll column, so the prompt sits directly
+             under the last line of output the way a real terminal does. -->
+        <div class="term__screen" id="term-screen">
+          <div id="term-log"></div>
+          <div class="cmd__bar">
+            <span class="cmd__ps1" aria-hidden="true">ali@field <b>~</b> %</span>
+            <span class="cmd__wrap">
+              <input
+                id="cmd-input"
+                type="text"
+                placeholder="help"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                aria-autocomplete="list"
+                aria-label="Terminal input"
+              />
+              <span class="cmd__ghost" id="cmd-ghost" aria-hidden="true"></span>
+            </span>
+          </div>
+        </div>
+
+        <div class="cmd__foot mono">
+          <span><b>tab</b> complete</span>
+          <span>↑↓ history</span>
+          <span><b>help</b> commands</span>
+          <span><b>⌘L</b> clear</span>
+          <span>pgup/pgdn scroll</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll machinery: real page height lives here, rendering happens in #content. -->
+    <div id="spacer" aria-hidden="true"></div>
+    <main id="content"></main>
+
+    <div id="cursor" aria-hidden="true"><i></i><b></b></div>
+
+    <noscript>
+      <div style="padding: 4rem 1.5rem; max-width: 46rem; margin: 0 auto; font-family: system-ui">
+        <h1>Ali Tarraf — Senior Software Engineer</h1>
+        <p>
+          Senior Software Engineer with 5+ years building scalable SaaS platforms, multi-tenant applications and
+          client-facing products with React, Next.js, Vue, Nuxt and TypeScript, serving more than one million users
+          globally. Frontend architecture, technical leadership, and delivery.
+        </p>
+        <p>
+          Sowlutions Inc (2024–2026) · Skeldus (2023–2024) · Numbase Group (2022–2023) · Docclik (2021–2022)
+        </p>
+        <p>
+          <a href="mailto:ali.tarraf2017@gmail.com">ali.tarraf2017@gmail.com</a> ·
+          <a href="https://linkedin.com/in/ali-tarraf-730b9a171">LinkedIn</a> ·
+          <a href="https://github.com/Tarraf2020">GitHub</a>
+        </p>
+        <p>This page is an interactive WebGL experience and needs JavaScript enabled.</p>
+      </div>
+    </noscript>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

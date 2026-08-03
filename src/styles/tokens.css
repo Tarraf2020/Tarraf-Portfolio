@@ -1,0 +1,79 @@
+/* ============================================================
+   THE FIELD — design tokens
+   One accent. Ember. Everything else is ink and bone.
+   ============================================================ */
+
+:root {
+  /* ---- colour ---- */
+  --ink-000: #05060a;
+  --ink-100: #08090c;
+  --ink-200: #0d0f14;
+  --ink-300: #14171e;
+  --ink-400: #1d212a;
+
+  --bone-100: #f4f1ec;
+  --bone-200: #ddd9d2;
+  --bone-300: #a8a6a1;
+  --mute-100: #7c7d86;
+  --mute-200: #55565e;
+
+  --ember: #ff5a1f;
+  --ember-lit: #ff8347;
+  --ember-deep: #c23a0c;
+  --violet: #6b5cff;
+  --signal: #45e0a0;
+
+  --line: color-mix(in oklab, var(--bone-100) 10%, transparent);
+  --line-soft: color-mix(in oklab, var(--bone-100) 6%, transparent);
+  --line-lit: color-mix(in oklab, var(--ember) 45%, transparent);
+
+  --glass: color-mix(in oklab, var(--ink-200) 62%, transparent);
+
+  /* ---- type ---- */
+  --font-display: 'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+
+  /* fluid scale — 390px → 1600px */
+  --step--2: clamp(0.68rem, 0.66rem + 0.1vw, 0.74rem);
+  --step--1: clamp(0.8rem, 0.77rem + 0.14vw, 0.88rem);
+  --step-0: clamp(0.95rem, 0.9rem + 0.22vw, 1.08rem);
+  --step-1: clamp(1.1rem, 1rem + 0.5vw, 1.4rem);
+  --step-2: clamp(1.4rem, 1.15rem + 1.1vw, 2.1rem);
+  --step-3: clamp(1.9rem, 1.4rem + 2.2vw, 3.4rem);
+  --step-4: clamp(2.5rem, 1.5rem + 4.4vw, 5.6rem);
+  --step-5: clamp(3.4rem, 1rem + 10vw, 10rem);
+  --step-6: clamp(4rem, -1rem + 19vw, 17rem);
+
+  --track-tight: -0.045em;
+  --track-mono: 0.16em;
+
+  /* ---- space ---- */
+  --gut: clamp(1.25rem, 3.2vw, 3.5rem);
+  --pad-x: clamp(1.25rem, 4vw, 5rem);
+  --bay: clamp(6rem, 14vh, 12rem);
+  --rule: 1px;
+
+  /* ---- motion ---- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 220ms;
+  --dur: 520ms;
+  --dur-slow: 900ms;
+
+  /* ---- depth ---- */
+  --z-field: 0;
+  --z-content: 10;
+  --z-chrome: 60;
+  --z-overlay: 80;
+  --z-boot: 100;
+  --z-cursor: 120;
+
+  color-scheme: dark;
+}
+
+/* The site is a single committed dark environment: a black room with an
+   ember-lit particle field in it. A light theme would be a different artwork.
+   We honour the reduced-motion signal instead. */

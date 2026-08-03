@@ -1,0 +1,175 @@
+/* ============================================================
+   THE DOJO
+   ============================================================ */
+
+/* The board has to be fully on screen while it is being played, so this
+   section runs a tighter type scale than the rest. */
+.sec--dojo {
+  padding-block: clamp(4rem, 9vh, 7rem);
+}
+.sec--dojo .sec__title {
+  font-size: var(--step-3);
+  margin-bottom: 1rem;
+}
+.sec--dojo .lede {
+  font-size: var(--step-0);
+  max-width: 54ch;
+  margin-bottom: 0;
+}
+
+.dojo {
+  margin-top: clamp(1.5rem, 3.5vw, 2.5rem);
+  display: grid;
+  /* The board is capped rather than fluid: a 1fr column let it grow to 750px
+     and push its own section off the bottom of the viewport. */
+  grid-template-columns: minmax(0, 25rem) minmax(0, 17rem);
+  justify-content: center;
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: center;
+  text-align: left;
+  margin-inline: auto;
+}
+
+.dojo__stage {
+  position: relative;
+  width: 100%;
+  max-width: 25rem;
+  max-height: 52svh;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in oklab, var(--ember) 5%, transparent), transparent 62%),
+    color-mix(in oklab, var(--ink-000) 55%, transparent);
+  overflow: hidden;
+  touch-action: manipulation;
+}
+.dojo__stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 90px -20px color-mix(in oklab, var(--ember) 30%, transparent);
+  pointer-events: none;
+}
+
+#dojo-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.dojo__overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1rem;
+  background: color-mix(in oklab, var(--ink-000) 55%, transparent);
+  backdrop-filter: blur(3px);
+  border-radius: 50%;
+  transition: opacity var(--dur) var(--ease-out), visibility var(--dur);
+}
+.dojo__overlay[data-state='playing'] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.dojo__rules {
+  color: var(--mute-100);
+  text-transform: none;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.dojo__panel {
+  display: grid;
+  gap: 0.05rem;
+  border-top: 1px solid var(--line);
+}
+.dojo__read {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.62rem 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.dojo__read span {
+  color: var(--mute-200);
+}
+.dojo__read b {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.dojo__read--best b {
+  color: var(--ember);
+  transition: color var(--dur);
+}
+.dojo__read--best b[data-fresh='true'] {
+  color: var(--signal);
+}
+
+.dojo__life {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.9rem 0 0.6rem;
+}
+.dojo__life i {
+  flex: 1;
+  height: 3px;
+  background: var(--ink-400);
+  transition: background var(--dur-fast), box-shadow var(--dur-fast);
+}
+.dojo__life i[data-lit='true'] {
+  background: var(--ember);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--ember) 60%, transparent);
+}
+
+.dojo__judge {
+  min-height: 1.4em;
+  color: var(--bone-300);
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+
+.dojo__mute {
+  justify-self: start;
+  margin-top: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.12em;
+  color: var(--mute-200);
+  border-bottom: 1px solid transparent;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+.dojo__mute:hover {
+  color: var(--ember);
+  border-color: var(--line-lit);
+}
+.dojo__mute[aria-pressed='true'] {
+  color: var(--signal);
+}
+
+@media (max-width: 820px) {
+  .dojo {
+    grid-template-columns: 1fr;
+  }
+  .dojo__stage {
+    max-width: 26rem;
+    margin-inline: auto;
+    width: 100%;
+  }
+  .dojo__panel {
+    max-width: 26rem;
+    margin-inline: auto;
+    width: 100%;
+  }
+}

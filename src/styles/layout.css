@@ -1,0 +1,249 @@
+/* ============================================================
+   Shell, scroll machinery, reveals
+   ============================================================ */
+
+#field {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  z-index: var(--z-field);
+  background: var(--ink-000);
+}
+
+/* Smooth mode: the page height is the spacer, the render is a fixed layer. */
+:root[data-scroll='smooth'] #content {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  will-change: transform;
+  z-index: var(--z-content);
+}
+:root[data-scroll='native'] #content {
+  position: relative;
+  z-index: var(--z-content);
+}
+:root[data-scroll='native'] #spacer {
+  display: none;
+}
+
+/* ---- section frame ---- */
+
+.sec {
+  position: relative;
+  min-height: 100svh;
+  padding: var(--bay) var(--pad-x);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  isolation: isolate;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 46rem;
+  margin-inline: 0 auto;
+}
+.wrap--right {
+  margin-inline: auto 0;
+}
+.wrap--center {
+  margin-inline: auto;
+  text-align: center;
+}
+.wrap--wide {
+  max-width: 78rem;
+  margin-inline: auto;
+}
+
+/* A whisper of a scrim under text-dense sections keeps the field from
+   fighting the copy without ever reading as a card. */
+.sec--manifesto::before,
+.sec--arch::before,
+.sec--work::before,
+.sec--stack::before,
+.sec--beyond::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse 90% 70% at 50% 50%, rgba(5, 6, 10, 0.72), transparent 72%);
+  pointer-events: none;
+}
+
+/* ---- eyebrow ---- */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: clamp(1.6rem, 3vw, 2.6rem);
+}
+.eyebrow__n {
+  color: var(--ember);
+  font-weight: 700;
+}
+.eyebrow__rule {
+  height: 1px;
+  width: clamp(2rem, 8vw, 6rem);
+  background: linear-gradient(90deg, var(--ember), transparent);
+}
+.eyebrow__t {
+  color: var(--bone-300);
+}
+.wrap--center .eyebrow {
+  justify-content: center;
+}
+.wrap--right .eyebrow {
+  justify-content: flex-start;
+}
+
+/* ---- section title ---- */
+
+.sec__title {
+  font-size: var(--step-4);
+  margin-bottom: 1.4rem;
+}
+.sec__title + .lede {
+  margin-bottom: clamp(2.2rem, 5vw, 4rem);
+}
+.lede--center {
+  margin-inline: auto;
+}
+
+/* ============================================================
+   Reveals — one transition, driven by an observer
+   ============================================================ */
+
+[data-reveal] {
+  opacity: 0;
+  translate: 0 22px;
+  filter: blur(7px);
+  transition:
+    opacity 0.9s var(--ease-out) var(--d, 0ms),
+    translate 1s var(--ease-out) var(--d, 0ms),
+    filter 0.9s var(--ease-out) var(--d, 0ms);
+}
+[data-reveal].is-in {
+  opacity: 1;
+  translate: 0 0;
+  filter: blur(0);
+}
+
+/* per-word rise, for headline lines */
+.w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-block: 0.06em;
+}
+.w > i {
+  display: inline-block;
+  font-style: inherit;
+  translate: 0 105%;
+  transition: translate 1.05s var(--ease-out);
+  transition-delay: calc(var(--wi, 0) * 55ms + var(--d, 0ms));
+}
+.is-in .w > i,
+.w.is-in > i {
+  translate: 0 0;
+}
+
+/* ============================================================
+   Buttons, chips, links
+   ============================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: color-mix(in oklab, var(--ink-200) 70%, transparent);
+  backdrop-filter: blur(10px);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    translate var(--dur-fast) var(--ease-out);
+}
+.btn:hover {
+  border-color: var(--line-lit);
+  translate: 0 -2px;
+}
+.btn--primary {
+  border-color: color-mix(in oklab, var(--ember) 60%, transparent);
+  background: color-mix(in oklab, var(--ember) 14%, var(--ink-200));
+  color: var(--bone-100);
+}
+.btn--primary:hover {
+  background: color-mix(in oklab, var(--ember) 26%, var(--ink-200));
+  box-shadow: 0 0 40px -8px color-mix(in oklab, var(--ember) 55%, transparent);
+}
+
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  padding: 0.18em 0.42em;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--bone-100) 6%, transparent);
+  color: var(--bone-200);
+  letter-spacing: 0.04em;
+}
+
+.chips {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 0.34rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--bone-200);
+  font-size: var(--step--2);
+  letter-spacing: 0.06em;
+  text-transform: none;
+  white-space: nowrap;
+  background: color-mix(in oklab, var(--ink-300) 45%, transparent);
+}
+.chip--mag {
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    translate 0.45s var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+.chip--mag:hover {
+  border-color: var(--line-lit);
+  color: var(--bone-100);
+  box-shadow: 0 0 26px -10px color-mix(in oklab, var(--ember) 70%, transparent);
+}
+
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.55rem;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--signal) 70%, transparent);
+  animation: pulse 2.6s var(--ease-out) infinite;
+  vertical-align: 1px;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--signal) 60%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}

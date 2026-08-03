@@ -1,0 +1,24 @@
+{
+  "name": "ali-tarraf-the-field",
+  "private": true,
+  "version": "1.0.0",
+  "description": "THE FIELD — an interactive portfolio for Ali Tarraf. One million GPU-simulated particles, one per user shipped to.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["portfolio", "webgl", "three.js", "gpgpu"],
+  "author": "Ali Tarraf",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5"
+  }
+}

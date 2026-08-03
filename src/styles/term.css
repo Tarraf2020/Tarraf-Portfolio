@@ -1,0 +1,346 @@
+/* ============================================================
+   THE SHELL — a full-screen terminal over the site
+   ============================================================ */
+
+#cmd {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  /* The field keeps burning behind it: 92% ink, not 100%. */
+  background: color-mix(in oklab, var(--ink-000) 92%, transparent);
+  backdrop-filter: blur(18px);
+  animation: term-in 0.32s var(--ease-out);
+}
+#cmd[hidden] {
+  display: none;
+}
+@keyframes term-in {
+  from {
+    opacity: 0;
+    scale: 1.012;
+  }
+}
+
+.cmd__sheet {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 0;
+  padding-inline: clamp(1rem, 5vw, 6rem);
+}
+
+/* ---- head ---- */
+
+.term__head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(0.9rem, 2vw, 1.4rem) 0 0.8rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+.term__title {
+  color: var(--mute-100);
+  font-size: 0.62rem;
+}
+.term__badge {
+  margin-left: auto;
+  font-size: 0.62rem;
+  color: var(--mute-200);
+}
+/* Escape does not close the shell, so it points here instead. */
+.term__badge.is-flash {
+  animation: exit-flash 1.1s var(--ease-out);
+}
+@keyframes exit-flash {
+  0%,
+  100% {
+    color: var(--mute-200);
+  }
+  15%,
+  55% {
+    color: var(--ember);
+  }
+}
+.term__badge b,
+.cmd__foot b {
+  color: var(--bone-200);
+  font-weight: 500;
+}
+
+/* ---- the screen: output and prompt in one scroll column ---- */
+
+.term__screen {
+  min-height: 0;
+  overflow: auto;
+  padding-block: 1.1rem clamp(4rem, 14vh, 9rem);
+  scrollbar-width: thin;
+  /* Faint scanline. Enough to read as a screen, not enough to fight the type. */
+  background-image: repeating-linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--bone-100) 1.5%, transparent) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* ---- the prompt, sitting directly under the last line of output ---- */
+
+.cmd__bar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+.cmd__ps1 {
+  flex: none;
+  font: 500 0.8rem/1.62 var(--font-mono);
+  letter-spacing: 0;
+  color: var(--mute-100);
+  white-space: nowrap;
+}
+.cmd__ps1 b {
+  color: var(--ember);
+  font-weight: 500;
+}
+.cmd__wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+#cmd-input {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--bone-100);
+  font: 400 0.8rem/1.62 var(--font-mono);
+  letter-spacing: 0;
+  caret-color: var(--ember);
+  outline: none;
+}
+#cmd-input::placeholder {
+  color: var(--mute-200);
+}
+
+/* The ghost sits under the input in the same metrics: the typed prefix is
+   invisible and only pushes the suggestion into place. Mono only — this trick
+   is a lie in any proportional face. */
+.cmd__ghost {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  white-space: pre;
+  overflow: hidden;
+  font: 400 0.8rem/1.62 var(--font-mono);
+  letter-spacing: 0;
+}
+.cmd__ghost i {
+  font-style: normal;
+  color: transparent;
+}
+.cmd__ghost b {
+  font-weight: 400;
+  color: var(--mute-200);
+}
+
+/* ---- foot ---- */
+
+.cmd__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  padding: 0.75rem 0 clamp(0.75rem, 2vw, 1.2rem);
+  border-top: 1px solid var(--line-soft);
+  color: var(--mute-200);
+  font-size: 0.6rem;
+}
+
+/* ============================================================
+   OUTPUT
+   ============================================================ */
+
+/* One horizontal scroll for the whole screen rather than one per line: a chart
+   wider than the viewport has to stay aligned row to row while you drag it.
+   neofetch opts out — it is a flex block that should wrap and stack instead. */
+.blk {
+  margin-bottom: 0.7rem;
+}
+.blk:not(:has(.fetch)) {
+  width: max-content;
+  min-width: 100%;
+}
+.blk--in {
+  margin-bottom: 0.35rem;
+}
+
+.tl {
+  font: 400 0.8rem/1.62 var(--font-mono);
+  /* Zero tracking, non-negotiable: box-drawing and block glyphs only join into
+     rules and bars when the cells actually touch. */
+  letter-spacing: 0;
+  white-space: pre;
+  color: var(--bone-200);
+  /* Lines land in sequence rather than all at once — a print, not a paste. */
+  animation: tl-in 0.34s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 14ms);
+}
+@keyframes tl-in {
+  from {
+    opacity: 0;
+    translate: -3px 0;
+  }
+}
+
+.tl--in {
+  color: var(--bone-100);
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--line-soft);
+}
+#term-log > .blk:first-child .tl--in {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.c-em {
+  color: var(--ember);
+}
+.c-lit {
+  color: var(--ember-lit);
+}
+.c-sig {
+  color: var(--signal);
+}
+.c-vio {
+  color: var(--violet);
+}
+.c-bone {
+  color: var(--bone-100);
+}
+.c-mid {
+  color: var(--bone-300);
+}
+.c-dim {
+  color: var(--mute-200);
+}
+
+/* ---- bars: character cells for the grid, CSS for the ink ---- */
+
+.mtr {
+  display: inline-block;
+  position: relative;
+  line-height: 1;
+  /* Keeps `color` live for currentColor while hiding the glyphs themselves. */
+  -webkit-text-fill-color: transparent;
+}
+.mtr::before,
+.mtr::after {
+  content: '';
+  position: absolute;
+  top: 0.19em;
+  bottom: 0.17em;
+  border-radius: 1.5px;
+}
+.mtr::before {
+  left: 0;
+  right: 0;
+  background: color-mix(in oklab, currentColor 13%, transparent);
+}
+/* Gantt bars and swatches are all ink, no track. */
+.mtr--solid::before {
+  display: none;
+}
+.mtr::after {
+  left: 0;
+  width: var(--f, 0%);
+  background: currentColor;
+  box-shadow: 0 0 12px -3px currentColor;
+}
+
+.tl mark {
+  background: color-mix(in oklab, var(--ember) 28%, transparent);
+  color: var(--bone-100);
+  border-radius: 2px;
+}
+
+/* A live block gets a pulsing marker so it is obvious the numbers are moving. */
+.blk--live {
+  position: relative;
+  padding-left: 0.55rem;
+  border-left: 1px solid var(--line-lit);
+  animation: tl-in 0.34s var(--ease-out) both;
+}
+/* Its rows are replaced four times a second. Animating them would restart the
+   entry fade on every repaint and leave the whole panel strobing. */
+.blk--live .tl {
+  animation: none;
+}
+.blk--live::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 0.55rem;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ember);
+  animation: live-pulse 1.6s var(--ease-in-out) infinite;
+}
+@keyframes live-pulse {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/* ---- neofetch ---- */
+
+.fetch {
+  display: flex;
+  gap: 1.4rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.fetch__art {
+  flex: none;
+  font: 400 0.8rem/1.05 var(--font-mono);
+  letter-spacing: 0;
+  animation: tl-in 0.5s var(--ease-out) both;
+}
+.art {
+  background: linear-gradient(150deg, var(--ember-deep), var(--ember) 45%, var(--ember-lit) 70%, var(--bone-100));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.fetch__info {
+  flex: 1;
+  min-width: 15rem;
+}
+
+/* ---- narrow screens: the charts are 76 characters wide and stay that way,
+        so the screen scrolls sideways instead of reflowing into nonsense ---- */
+
+@media (max-width: 700px) {
+  .cmd__sheet {
+    padding-inline: 0.9rem;
+  }
+  .tl,
+  .fetch__art,
+  #cmd-input,
+  .cmd__ghost,
+  .cmd__ps1 {
+    font-size: 0.72rem;
+  }
+  .term__screen {
+    padding-block: 0.9rem clamp(3rem, 18vh, 7rem);
+  }
+  /* The prompt already says ali@field; on a phone the exit hint is the only
+     thing in the header worth the width. */
+  .term__title {
+    display: none;
+  }
+  .term__badge {
+    margin-left: 0;
+  }
+}
