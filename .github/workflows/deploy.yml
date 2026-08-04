@@ -22,6 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history, because the build reads it: sitemap.xml takes each
+          # URL's <lastmod> from the last commit that touched that file. The
+          # default shallow clone has only the tip commit, so every file would
+          # report the same date and the per-file signal would be lost.
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: '22'

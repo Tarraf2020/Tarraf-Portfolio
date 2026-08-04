@@ -367,6 +367,13 @@ const contact = () => `
           <i aria-hidden="true"></i>
         </a>
       </li>
+      <li data-reveal style="--d:240ms">
+        <a class="clink" href="${profile.resume}" target="_blank" rel="noopener">
+          <span class="mono">resume</span>
+          <b>${esc(profile.resumeLabel)}</b>
+          <i aria-hidden="true"></i>
+        </a>
+      </li>
     </ul>
 
     <footer class="foot">

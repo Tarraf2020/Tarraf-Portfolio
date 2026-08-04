@@ -428,6 +428,10 @@ const work: Cmd = {
         row(['  ' + ' '.repeat(12)], [`${r.from} — ${r.to}`, 'dim'], ['   ', 'dim'], [r.place.toLowerCase(), 'dim']),
       );
     }
+
+    // `resume` and `cv` are both aliases onto this command, so anyone who came
+    // looking for the document itself is standing right here.
+    out.push(gap(), row(['  open resume', 'em'], [' · ', 'dim'], [profile.resumeLabel, 'dim']));
     return out;
   },
 };
@@ -573,7 +577,7 @@ const edu: Cmd = {
 const contact: Cmd = {
   name: 'contact',
   group: 'data',
-  brief: 'four ways to reach him',
+  brief: 'five ways to reach him',
   run() {
     return [
       head('CONTACT', profile.available ? 'open to work' : ''),
@@ -581,9 +585,17 @@ const contact: Cmd = {
       row(...kv('phone', profile.phone)),
       row(...kv('linkedin', profile.linkedin, 'mid')),
       row(...kv('github', profile.github, 'mid')),
+      // Every other row here is something you can actually go to, so this one
+      // is the path rather than the label the contact card uses.
+      row(...kv('resume', profile.resume.replace('./', '/'), 'mid')),
       row(...kv('based', profile.location)),
       gap(),
-      row(['  mail', 'em'], [' opens a draft · ', 'dim'], ['open github|linkedin', 'em'], [' opens a tab', 'dim']),
+      row(
+        ['  mail', 'em'],
+        [' opens a draft · ', 'dim'],
+        ['open github|linkedin|resume', 'em'],
+        [' opens a tab', 'dim'],
+      ),
     ];
   },
 };
@@ -603,13 +615,17 @@ const openCmd: Cmd = {
   name: 'open',
   usage: '<target>',
   group: 'nav',
-  brief: 'github · linkedin · email',
-  args: () => ['github', 'linkedin', 'email'],
+  brief: 'github · linkedin · resume · email',
+  args: () => ['github', 'linkedin', 'resume', 'email'],
   run(argv, io) {
     const q = (argv[0] ?? '').toLowerCase();
     if ('github'.startsWith(q) && q) {
       open(profile.github, '_blank');
       return [row(['  → ', 'dim'], [profile.github, 'em'])];
+    }
+    if ('resume'.startsWith(q) && q) {
+      open(profile.resume, '_blank');
+      return [row(['  → ', 'dim'], [profile.resume.replace('./', '/'), 'em'], [` · ${profile.resumeLabel}`, 'dim'])];
     }
     if ('linkedin'.startsWith(q) && q) {
       open(profile.linkedin, '_blank');
@@ -626,7 +642,7 @@ const openCmd: Cmd = {
       );
       return;
     }
-    return notFound('target', ['github', 'linkedin', 'email']);
+    return notFound('target', ['github', 'linkedin', 'resume', 'email']);
   },
 };
 

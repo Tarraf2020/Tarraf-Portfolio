@@ -16,6 +16,12 @@ export const profile = {
   github: "https://github.com/Tarraf2020",
   linkedinLabel: "ali-tarraf-730b9a171",
   githubLabel: "Tarraf2020",
+  // Relative, to match vite's base: './' — the same path resolves whether the
+  // site is served from alitarraf.dev or the project path on github.io. No year
+  // in the filename on purpose: next year's edition replaces this one without
+  // breaking a link somebody already sent to a recruiter.
+  resume: "./ali-tarraf-resume.pdf",
+  resumeLabel: "PDF · 3 pages",
 } as const;
 
 export const manifesto = [
