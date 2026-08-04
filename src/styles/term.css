@@ -4,7 +4,15 @@
 
 #cmd {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* Not inset: 0. A software keyboard shrinks the visual viewport without
+     touching the layout viewport, so a full-height overlay puts the prompt and
+     the key row behind the keyboard — you type blind. terminal.ts measures
+     visualViewport into --term-h; 100dvh is the answer before it reports and
+     on anything without it. */
+  height: var(--term-h, 100dvh);
   z-index: var(--z-overlay);
   display: grid;
   /* The field keeps burning behind it: 92% ink, not 100%. */
@@ -24,9 +32,13 @@
 
 .cmd__sheet {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  /* head / screen / foot / key row. The key row is display:none where there is
+     a real keyboard, and an auto track with nothing in it costs no height. */
+  grid-template-rows: auto 1fr auto auto;
   min-height: 0;
-  padding-inline: clamp(1rem, 5vw, 6rem);
+  /* viewport-fit=cover means the inline padding has to clear a landscape notch
+     as well as look right. */
+  padding-inline: max(clamp(1rem, 5vw, 6rem), env(safe-area-inset-left), env(safe-area-inset-right));
 }
 
 /* ---- head ---- */
@@ -35,7 +47,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: clamp(0.9rem, 2vw, 1.4rem) 0 0.8rem;
+  padding: calc(clamp(0.9rem, 2vw, 1.4rem) + env(safe-area-inset-top)) 0 0.8rem;
   border-bottom: 1px solid var(--line-soft);
 }
 .term__title {
@@ -67,11 +79,32 @@
   font-weight: 500;
 }
 
+/* Touch only — see the note in index.html. */
+.term__x {
+  display: none;
+  flex: none;
+  /* No margin-left:auto here — the badge already carries it, and a second auto
+     would split the free space between the two instead of banking it left. */
+  /* 44px of target under a 13px glyph: the hit area is the point, not the mark. */
+  width: 44px;
+  height: 44px;
+  margin-right: -0.75rem;
+  color: var(--mute-100);
+  font: 400 0.82rem / 1 var(--font-mono);
+}
+.term__x:active {
+  color: var(--ember);
+}
+
 /* ---- the screen: output and prompt in one scroll column ---- */
 
 .term__screen {
   min-height: 0;
   overflow: auto;
+  /* Wide charts are dragged sideways, so both axes are in play — but a flick
+     that runs off the end must not hand the gesture to the locked page behind
+     and rubber-band the whole shell. */
+  overscroll-behavior: contain;
   padding-block: 1.1rem clamp(4rem, 14vh, 9rem);
   scrollbar-width: thin;
   /* Faint scanline. Enough to read as a screen, not enough to fight the type. */
@@ -155,6 +188,38 @@
   border-top: 1px solid var(--line-soft);
   color: var(--mute-200);
   font-size: 0.6rem;
+}
+
+/* ---- the key row: tab / history / clear for keyboards that lack them ---- */
+
+.term__keys {
+  display: none;
+  gap: 0.4rem;
+  padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line-soft);
+}
+.term__keys button {
+  flex: 1;
+  min-width: 0;
+  /* Thumb-sized floor, per Apple's 44pt and Android's 48dp. */
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--ink-300) 55%, transparent);
+  color: var(--bone-300);
+  font: 500 0.68rem / 1 var(--font-mono);
+  letter-spacing: var(--track-mono);
+  text-transform: uppercase;
+  /* No 300ms tap delay, and no double-tap-to-zoom on a row of buttons. */
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* :active, not :hover — the row only exists where hover does not. */
+.term__keys button:active {
+  border-color: var(--line-lit);
+  background: color-mix(in oklab, var(--ember) 16%, transparent);
+  color: var(--bone-100);
 }
 
 /* ============================================================
@@ -323,17 +388,28 @@
 
 @media (max-width: 700px) {
   .cmd__sheet {
-    padding-inline: 0.9rem;
+    padding-inline: max(0.9rem, env(safe-area-inset-left), env(safe-area-inset-right));
   }
+  /* 16px exactly, and the reason is not taste: Safari zooms the page when a
+     focused input measures under 16px, which on a fixed overlay leaves the
+     shell scaled up and half off-screen with no way back. Raising the input
+     alone would fix the zoom and split the scrollback into two sizes — the
+     echoed line and the live prompt are the same stream and have to match — so
+     the whole screen moves together. Wide charts cost more sideways drag at
+     this size; 11px mono on a phone costs more than that. */
   .tl,
   .fetch__art,
   #cmd-input,
   .cmd__ghost,
   .cmd__ps1 {
-    font-size: 0.72rem;
+    font-size: 1rem;
   }
+  /* The old 18vh of bottom padding was clearance for the software keyboard,
+     which --term-h now handles properly; left in, it read as 150px of dead
+     screen under the prompt. What remains is just breathing room above the key
+     row. */
   .term__screen {
-    padding-block: 0.9rem clamp(3rem, 18vh, 7rem);
+    padding-block: 0.9rem clamp(1.5rem, 6vh, 3rem);
   }
   /* The prompt already says ali@field; on a phone the exit hint is the only
      thing in the header worth the width. */
@@ -342,5 +418,68 @@
   }
   .term__badge {
     margin-left: 0;
+  }
+  /* The art beside a 76-column info block does not fit a phone, and squeezing
+     the two side by side clipped every value in it. Stacked, each gets the full
+     width and only the info rows run into the horizontal scroll the rest of the
+     output already lives in. */
+  .fetch {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .fetch__info {
+    min-width: 0;
+  }
+
+  /* A phone has no scrollbar, so the only cue that a chart continues past the
+     right edge is the type fading into it. A mask, not a gradient overlay: the
+     shell is translucent, so there is no flat colour to fade to — only the
+     field. terminal.ts drops the flag at the end of the scroll, so the last
+     cell of a bar is never dimmed by the affordance pointing at it. */
+  #cmd[data-panx='true'] .term__screen {
+    -webkit-mask-image: linear-gradient(to left, transparent, #000 1.75rem);
+    mask-image: linear-gradient(to left, transparent, #000 1.75rem);
+  }
+}
+
+/* ---- touch: the keys the footer names do not exist, so hand them over ---- */
+
+@media (pointer: coarse) {
+  .cmd__foot {
+    display: none;
+  }
+  .term__keys {
+    display: flex;
+  }
+  .term__x {
+    display: block;
+  }
+  /* The badge loses its margin-left:auto to the close button next to it. */
+  .term__badge {
+    margin-left: auto;
+  }
+  /* A live blur over a million particles is a per-frame full-screen pass, and
+     on a phone GPU it is the difference between a shell and a slideshow. The
+     design point is that the field stays visible behind the type, not that it
+     is blurred — so drop the pass and buy the legibility back with ink. */
+  #cmd {
+    background: color-mix(in oklab, var(--ink-000) 96%, transparent);
+    backdrop-filter: none;
+  }
+  /* The blur was also doing a second job: turning everything behind the shell
+     into a wash. Without it the document reads straight through — the topbar's
+     own label lands on top of the exit hint, and the hero copy sits inside the
+     scrollback. The field is what is meant to show through, so hide the
+     document and the chrome and leave the canvas to it.
+
+     visibility rather than display: `cd <section>` closes the shell and then
+     measures that section's geometry, and only visibility keeps a layout there
+     to measure. */
+  body[data-locked='true'] #topbar,
+  body[data-locked='true'] #rail,
+  body[data-locked='true'] #hud,
+  body[data-locked='true'] #progress,
+  body[data-locked='true'] #content {
+    visibility: hidden;
   }
 }

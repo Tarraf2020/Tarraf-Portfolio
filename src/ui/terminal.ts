@@ -22,6 +22,8 @@ export function initTerminal(ctx: TermCtx) {
   const ghost = document.querySelector<HTMLElement>('#cmd-ghost')!;
   const opener = document.querySelector<HTMLElement>('#cmd-open')!;
   const exitHint = document.querySelector<HTMLElement>('#term-exit')!;
+  const keys = document.querySelector<HTMLElement>('#term-keys')!;
+  const closeBtn = document.querySelector<HTMLElement>('#term-close')!;
 
   const hist: string[] = [];
   let histAt = -1;
@@ -43,7 +45,47 @@ export function initTerminal(ctx: TermCtx) {
 
   const scrollDown = () => {
     screen.scrollTop = screen.scrollHeight;
+    // Home on the left edge too. Dragging a 76-column chart sideways leaves the
+    // whole column panned, prompt included — so on a phone you finish reading a
+    // chart, type, and cannot see your own input. A terminal has no horizontal
+    // pan to preserve, so every new line snaps back.
+    screen.scrollLeft = 0;
   };
+
+  /** Flags "there is more chart to the right" for the edge fade in term.css. */
+  const markPanX = () => {
+    const more = screen.scrollWidth - screen.clientWidth - screen.scrollLeft > 2;
+    root.dataset.panx = String(more);
+  };
+  screen.addEventListener('scroll', markPanX, { passive: true });
+
+  // ------------------------------------------------------------- the viewport
+  //
+  // The overlay is sized from visualViewport rather than the layout viewport,
+  // because a software keyboard covers the bottom of the second without
+  // changing it. Without this the prompt you are typing into is behind the
+  // keyboard. Android usually resizes the window instead, in which case this
+  // reports the same number the CSS fallback would and nothing moves.
+  const vv = window.visualViewport;
+
+  const fitViewport = () => {
+    if (!vv) return;
+    document.documentElement.style.setProperty('--term-h', `${Math.round(vv.height)}px`);
+  };
+
+  if (vv) {
+    fitViewport();
+    vv.addEventListener('resize', () => {
+      fitViewport();
+      // The keyboard opening is the one resize where the reader is definitely
+      // looking at the prompt, so follow it down rather than leaving them
+      // staring at the middle of the scrollback.
+      if (open_) {
+        scrollDown();
+        markPanX();
+      }
+    });
+  }
 
   /** Append one output block; the CSS staggers its lines by index. */
   const block = (html: string, cls = '') => {
@@ -56,6 +98,7 @@ export function initTerminal(ctx: TermCtx) {
     log.append(el);
     while (log.children.length > MAX_BLOCKS) log.firstElementChild?.remove();
     scrollDown();
+    markPanX();
     return el;
   };
 
@@ -72,6 +115,7 @@ export function initTerminal(ctx: TermCtx) {
     paintGhost();
     input.focus();
     scrollDown();
+    markPanX();
   };
 
   const hide = () => {
@@ -91,6 +135,7 @@ export function initTerminal(ctx: TermCtx) {
     clear: () => {
       log.innerHTML = '';
       lives.length = 0;
+      markPanX();
     },
     close: hide,
     history: () => [...hist],
@@ -179,6 +224,43 @@ export function initTerminal(ctx: TermCtx) {
   };
 
   opener.addEventListener('click', show);
+  closeBtn.addEventListener('click', hide);
+
+  // ------------------------------------------------------------- the key row
+  //
+  // pointerdown with preventDefault, not click: the default action of pressing
+  // a button is to move focus to it, and on a phone focus leaving the input
+  // dismisses the software keyboard. It would come straight back on the
+  // refocus below, so the visible result of tapping `tab` would be the
+  // keyboard slamming shut and reopening. Cancelling the default keeps the
+  // caret — and the keyboard — exactly where they were.
+  keys.addEventListener('pointerdown', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-key]');
+    if (!btn) return;
+    e.preventDefault();
+
+    switch (btn.dataset.key) {
+      case 'tab':
+        accept();
+        break;
+      case 'up':
+        recall(-1);
+        break;
+      case 'down':
+        recall(1);
+        break;
+      // ⌘L wipes the scrollback without echoing itself; so does this.
+      case 'clear':
+        io.clear();
+        break;
+      case 'help':
+        input.value = '';
+        paintGhost();
+        exec('help');
+        break;
+    }
+    input.focus();
+  });
 
   addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -244,8 +326,12 @@ export function initTerminal(ctx: TermCtx) {
   input.addEventListener('input', paintGhost);
 
   // Clicking anywhere in the shell hands focus back to the prompt, the way a
-  // terminal window does — but not while the reader is selecting output.
-  root.addEventListener('pointerup', () => {
+  // terminal window does — but not while the reader is selecting output, and
+  // not on the way out: this fires before the close button's click, so without
+  // the guard, tapping ✕ summons the keyboard for the frame before the shell
+  // disappears.
+  root.addEventListener('pointerup', (e) => {
+    if ((e.target as HTMLElement).closest('button')) return;
     if (!getSelection()?.toString()) input.focus();
   });
 }

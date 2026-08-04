@@ -107,6 +107,24 @@ body[data-booting='false'] #topbar {
   }
 }
 
+/* ⌘K is not available on a touch device, so advertising the chord there is a
+   dead instruction — and it was the only label the button had on a phone. Trade
+   the chips for the word, and give it a target a thumb can land on. Must follow
+   the 620px block: same specificity, so source order is what decides. */
+@media (pointer: coarse) {
+  .topbar__cmd {
+    min-height: 44px;
+    padding-inline: 0.9rem;
+  }
+  .topbar__cmd kbd {
+    display: none;
+  }
+  .topbar__cmd span {
+    display: inline;
+    padding-left: 0;
+  }
+}
+
 /* ============================================================
    RAIL — vertical section nav
    ============================================================ */

@@ -1,0 +1,5 @@
+# alitarraf.dev — one page, all of it public.
+User-agent: *
+Allow: /
+
+Sitemap: https://alitarraf.dev/sitemap.xml
