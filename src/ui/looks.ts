@@ -12,6 +12,20 @@ import type { SectionId } from '../content';
  * `size` and `opacity` are deliberately tiny. A million sprites at 1.2 px and
  * 6% alpha still saturate a dense formation past 1.0 — the composer's ACES
  * curve is what turns that overflow into a highlight instead of a white hole.
+ *
+ * Every entry declares `fitWidth` *and* `fitHeight` — the formation's own
+ * extent in world units, measured off the functions in shaders/common.glsl.ts.
+ * They are what makes the piece survive a viewport it was not tuned on: on a
+ * 16:9 laptop the camera's own z is further back than either constraint, so
+ * they never bind and nothing here changes. They bind on the shapes nobody
+ * designs against — a phone held upright, a laptop window two thirds as tall
+ * as the screen it is on, a browser sharing the display with an editor.
+ *
+ * `bleed` is the judgement call that goes with them. A formation with a
+ * silhouette — the orb, the globe, the bars, the name — has to arrive whole or
+ * it reads as debris, so it opts out. A planar one — the stream, the lattice,
+ * the graph, the core's streaks — is better as a cropped slice of something
+ * larger than as a small complete thing, so it keeps it.
  */
 export const LOOKS: Record<SectionId, FieldLook> = {
   hero: {
@@ -50,6 +64,10 @@ export const LOOKS: Record<SectionId, FieldLook> = {
     cam: [0, 5.2, 23],
     target: [0, 0.4, 0],
     fov: 48,
+    // The shell is 13.9 across; the accretion ring is twice that and may go.
+    fitWidth: 14.5,
+    fitHeight: 14.5,
+    bleed: false,
     cold: 0x5a1a5e,
     warm: 0xff7838,
     hot: 0xffe8d2,
@@ -71,6 +89,8 @@ export const LOOKS: Record<SectionId, FieldLook> = {
     fov: 42,
     fitWidth: 16,
     fitHeight: 19,
+    // Half a planet is not a planet.
+    bleed: false,
     cold: 0x1f4f80,
     warm: 0xffc08a,
     hot: 0xffffff,
@@ -91,6 +111,7 @@ export const LOOKS: Record<SectionId, FieldLook> = {
     target: [0, 0, 0],
     fov: 45,
     fitWidth: 25,
+    fitHeight: 14,
     cold: 0x4a35b8,
     warm: 0x9d82ff,
     hot: 0xeee9ff,
@@ -111,6 +132,7 @@ export const LOOKS: Record<SectionId, FieldLook> = {
     target: [0, -0.5, 0],
     fov: 46,
     fitWidth: 31,
+    fitHeight: 8,
     cold: 0x2c4a72,
     warm: 0xff8a4a,
     hot: 0xffe6d2,
@@ -130,7 +152,10 @@ export const LOOKS: Record<SectionId, FieldLook> = {
     cam: [0, -0.6, 27],
     target: [0, -1.2, 0],
     fov: 44,
-    fitWidth: 22,
+    // Seven bars spanning 15.7. Cropping this one drops metrics off the chart.
+    fitWidth: 16.5,
+    fitHeight: 11,
+    bleed: false,
     cold: 0x1c7a5e,
     warm: 0x58f0b2,
     hot: 0xeafff6,
@@ -151,6 +176,7 @@ export const LOOKS: Record<SectionId, FieldLook> = {
     target: [0, 0, 0],
     fov: 46,
     fitWidth: 29,
+    fitHeight: 15.5,
     cold: 0x2c4a72,
     warm: 0xff8a4a,
     hot: 0xffe6d2,
@@ -170,6 +196,9 @@ export const LOOKS: Record<SectionId, FieldLook> = {
     cam: [0, 6.4, 22],
     target: [0, 0.5, 0],
     fov: 50,
+    fitWidth: 14.5,
+    fitHeight: 14.5,
+    bleed: false,
     cold: 0x7a1c34,
     warm: 0xff5a1f,
     hot: 0xfff0e2,
@@ -190,6 +219,7 @@ export const LOOKS: Record<SectionId, FieldLook> = {
     target: [0, 0, 0],
     fov: 46,
     fitWidth: 29,
+    fitHeight: 15.5,
     cold: 0x2c4a72,
     warm: 0xff9a5e,
     hot: 0xffe6d2,
@@ -209,7 +239,9 @@ export const LOOKS: Record<SectionId, FieldLook> = {
     cam: [0, 0, 24],
     target: [0, 0, 0],
     fov: 46,
+    // The core is 5 across; the streaks reach 36 and are meant to leave frame.
     fitWidth: 27,
+    fitHeight: 14,
     cold: 0x8a2205,
     warm: 0xff7a2a,
     hot: 0xfff6ec,

@@ -248,6 +248,16 @@ body[data-booting='false'] #hud {
   }
 }
 
+/* A phone on its side is wide enough to keep the readout by the old rule and
+   far too short to have anywhere to put it: it sat on top of the copy. The HUD
+   is an honesty panel, not a control — `neofetch` in the shell reports the same
+   numbers, so nothing is actually lost by standing it down here. */
+@media (max-height: 560px) and (orientation: landscape) {
+  #hud {
+    display: none;
+  }
+}
+
 /* ============================================================
    PROGRESS
    ============================================================ */

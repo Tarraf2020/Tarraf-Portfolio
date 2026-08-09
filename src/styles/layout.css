@@ -2,12 +2,19 @@
    Shell, scroll machinery, reveals
    ============================================================ */
 
+/* The canvas takes the fixed viewport box and nothing else.
+   `100vw` was a bug on any platform with a classic scrollbar — Windows —
+   because it counts the scrollbar's width and the element it sizes does not
+   sit under it, so the field overhung the page by a dozen pixels and the
+   drawing buffer was cut to a different aspect than the box it filled. And
+   `100svh` disagreed with the buffer height on mobile the moment the URL bar
+   hid. Both disagreements landed as a stretched render. 100% of the fixed box
+   cannot disagree with itself; the renderer measures the same box back. */
 #field {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100svh;
+  width: 100%;
+  height: 100%;
   z-index: var(--z-field);
   background: var(--ink-000);
 }

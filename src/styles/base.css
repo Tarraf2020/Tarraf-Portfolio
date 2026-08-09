@@ -195,6 +195,50 @@ ol {
   }
 }
 
+/* ============================================================
+   Low-end GPUs — data-gpu is set from the tier the field got
+   ============================================================ */
+
+/* Each of these is a full-screen read of a canvas being redrawn at 60fps, and
+   there are a dozen of them on the page. On a discrete card that is free; on
+   the integrated graphics in a thin Windows laptop it is charged to the same
+   budget the simulation is already spending, and both lose. What the blur buys
+   is separation between the copy and the field — ink buys the same separation
+   for nothing. */
+:root[data-gpu='low'] .btn,
+:root[data-gpu='low'] .arch__card,
+:root[data-gpu='low'] .impact__item,
+:root[data-gpu='low'] .beyond__card,
+:root[data-gpu='low'] .dojo__overlay,
+:root[data-gpu='low'] #cmd {
+  backdrop-filter: none;
+}
+:root[data-gpu='low'] .arch__card,
+:root[data-gpu='low'] .impact__item,
+:root[data-gpu='low'] .beyond__card {
+  background: color-mix(in oklab, var(--ink-100) 94%, transparent);
+}
+:root[data-gpu='low'] .arch__card:hover,
+:root[data-gpu='low'] .impact__item:hover,
+:root[data-gpu='low'] .beyond__card:hover {
+  background: color-mix(in oklab, var(--ink-300) 94%, transparent);
+}
+:root[data-gpu='low'] .btn:not(.btn--primary) {
+  background: color-mix(in oklab, var(--ink-200) 92%, transparent);
+}
+:root[data-gpu='low'] .dojo__overlay {
+  background: color-mix(in oklab, var(--ink-000) 80%, transparent);
+}
+:root[data-gpu='low'] #cmd {
+  background: color-mix(in oklab, var(--ink-000) 96%, transparent);
+}
+/* The grain is a screen-sized blended layer stepping six times a loop. It is a
+   texture, not a motion — holding it still costs the look almost nothing. */
+:root[data-gpu='low'] .atmos::before {
+  animation: none;
+  opacity: 0.035;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .atmos::before {
     animation: none;

@@ -1,7 +1,16 @@
 export const POINTS_VERT = /* glsl */ `
 uniform sampler2D uPos;
 uniform float uSize;
-uniform float uDpr;
+/**
+ * Device pixels per reference pixel — the frame's own height, not its pixel
+ * ratio. gl_PointSize is in device pixels, so scaling by dpr alone made a
+ * particle cover a *smaller* fraction of a big screen than a small one: the
+ * same field read as dense on a laptop and as thin grey dust on a 4K monitor,
+ * because coverage fell with the square of the resolution. Tying the sprite to
+ * frame height keeps coverage — and therefore brightness through the ACES
+ * curve — constant at every size.
+ */
+uniform float uScale;
 
 varying float vEnergy;
 varying float vDepth;
@@ -17,7 +26,7 @@ void main() {
   gl_Position = projectionMatrix * mv;
 
   float d = max(-mv.z, 0.75);
-  float ps = uSize * uDpr * (22.0 / d);
+  float ps = uSize * uScale * (22.0 / d);
 
   // Below one pixel, growing the sprite would lie about density; dim it
   // instead so the field thins out honestly with distance.

@@ -760,6 +760,50 @@
   }
 }
 
+/* A phone on its side, or a laptop window with half the screen given to an
+   editor. The hero was reserving a fifth of the height for the wordmark and
+   another fifth for the scroll cue, on a viewport that has neither to spare. */
+@media (max-height: 620px) and (orientation: landscape) {
+  .sec--hero {
+    padding-top: clamp(3.5rem, 13vh, 6rem);
+    padding-bottom: 2rem;
+  }
+  /* 390 pixels of height cannot carry display type sized off the width — at
+     844 wide the fluid step lands near 4rem, which is two lines of headline
+     and no room for anything under it. */
+  .hero__title {
+    font-size: clamp(1.75rem, 4.4vw, 2.6rem);
+  }
+  .hero__sub {
+    margin-top: 0.9rem;
+    max-width: 52ch;
+  }
+  .hero__spelled {
+    margin-top: 0.7rem;
+  }
+  .hero__foot {
+    margin-top: 1.25rem;
+  }
+  .scrollcue__line {
+    height: 28px;
+  }
+  /* The hero is the one text-dense section with no scrim, because the wordmark
+     is meant to be read *as* the field. On a viewport this short they occupy
+     the same band and neither survives, so give the copy the same whisper of
+     ink the other sections get. */
+  .sec--hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(ellipse 90% 80% at 50% 62%, rgba(5, 6, 10, 0.78), transparent 74%);
+    pointer-events: none;
+  }
+  .sec--contact .contact__title {
+    margin-bottom: 1.5rem;
+  }
+}
+
 @media (max-width: 620px) {
   /* Leave the top third to the wordmark the field is spelling. */
   .sec--hero {

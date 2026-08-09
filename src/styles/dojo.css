@@ -30,11 +30,16 @@
   margin-inline: auto;
 }
 
+/* The board must be square: it is a circle with a canvas stretched across it,
+   and the canvas draws on a square buffer. Capping the *height* of a box with
+   `aspect-ratio: 1` does not keep it square — it overrides the ratio, and on
+   any viewport under about 770px tall (most laptop windows, every phone in
+   landscape) the ring became an ellipse with the targets smeared across it.
+   Cap the width by the available height instead, and the ratio holds. */
 .dojo__stage {
   position: relative;
   width: 100%;
-  max-width: 25rem;
-  max-height: 52svh;
+  max-width: min(25rem, 52svh);
   aspect-ratio: 1;
   margin-inline: auto;
   border: 1px solid var(--line);
@@ -162,8 +167,10 @@
   .dojo {
     grid-template-columns: 1fr;
   }
+  /* Stacked, the board and the readout share the height, so the board gets
+     less of it than it does side by side. */
   .dojo__stage {
-    max-width: 26rem;
+    max-width: min(26rem, 42svh);
     margin-inline: auto;
     width: 100%;
   }
@@ -171,5 +178,20 @@
     max-width: 26rem;
     margin-inline: auto;
     width: 100%;
+  }
+}
+
+/* A phone on its side has 390 pixels of height for a section that wants to
+   hold a board and a scoreboard. Put them back beside each other and let the
+   board take what height is left. */
+@media (max-height: 560px) and (orientation: landscape) {
+  /* A definite track, not `auto`: the board is width:100% of its column, so an
+     auto column sized to its content resolves the pair circularly and settles
+     at nothing. Size the column, and the square follows from it. */
+  .dojo {
+    grid-template-columns: min(25rem, 62svh) minmax(0, 17rem);
+  }
+  .dojo__stage {
+    max-width: 100%;
   }
 }

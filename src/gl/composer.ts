@@ -89,6 +89,10 @@ void main() {
 }
 `;
 
+function clampPixels(w: number, h: number) {
+  return { width: Math.max(2, Math.floor(w)), height: Math.max(2, Math.floor(h)) };
+}
+
 export class Composer {
   readonly scene: WebGLRenderTarget;
 
@@ -105,9 +109,9 @@ export class Composer {
   private blurMat: RawShaderMaterial;
   private compMat: RawShaderMaterial;
 
-  constructor(renderer: WebGLRenderer) {
+  constructor(renderer: WebGLRenderer, pixelWidth: number, pixelHeight: number) {
     this.renderer = renderer;
-    const { width, height } = this.pixels();
+    const { width, height } = clampPixels(pixelWidth, pixelHeight);
 
     const hdr = () =>
       new WebGLRenderTarget(width, height, {
@@ -182,14 +186,6 @@ export class Composer {
     this.quadScene.add(this.quad);
   }
 
-  private pixels() {
-    const dpr = this.renderer.getPixelRatio();
-    return {
-      width: Math.max(2, Math.floor(innerWidth * dpr)),
-      height: Math.max(2, Math.floor(innerHeight * dpr)),
-    };
-  }
-
   set exposure(v: number) {
     this.compMat.uniforms.uExposure!.value = v;
   }
@@ -204,8 +200,15 @@ export class Composer {
     return this.compMat.uniforms.uBloomStrength!.value as number;
   }
 
-  resize() {
-    const { width, height } = this.pixels();
+  /**
+   * Sized from the canvas the field actually occupies, in device pixels.
+   * Deriving it from `innerWidth`/`innerHeight` instead was wrong wherever the
+   * two disagree — a Windows scrollbar, an iOS URL bar, a split-screen pane —
+   * and the disagreement showed up as a stretched render, not a small one.
+   */
+  resize(pixelWidth: number, pixelHeight: number) {
+    const { width, height } = clampPixels(pixelWidth, pixelHeight);
+    if (width === this.scene.width && height === this.scene.height) return;
     this.scene.setSize(width, height);
     const bw = Math.max(2, Math.floor(width / 4));
     const bh = Math.max(2, Math.floor(height / 4));

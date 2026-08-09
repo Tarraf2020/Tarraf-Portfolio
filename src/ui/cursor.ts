@@ -32,8 +32,11 @@ export function initCursor(field: Field) {
         seen = true;
         el.classList.add('is-live');
       }
-      // Normalised device coords for the simulation's repulsor.
-      field.setPointer((mx / innerWidth) * 2 - 1, -(my / innerHeight) * 2 + 1, true);
+      // Normalised device coords for the simulation's repulsor — against the
+      // canvas box, not the window, or the repulsor sits off the cursor by
+      // however much the two disagree (a scrollbar's width, a URL bar's height).
+      const view = field.viewport;
+      field.setPointer((mx / view.width) * 2 - 1, -(my / view.height) * 2 + 1, true);
 
       const over = (e.target as Element | null)?.closest?.(linkSelector);
       el.dataset.mode = down ? 'drag' : over ? 'link' : '';

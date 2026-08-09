@@ -86,11 +86,31 @@ async function main() {
 
   // Frame the hero from the wordmark that actually got rasterised, rather than
   // from numbers guessed against one viewport.
-  const ext = f.wordmarkExtent;
-  LOOKS.hero.fitWidth = ext.width * 1.12;
-  LOOKS.hero.fitHeight = ext.height * 3.1;
-  BOOT_LOOK.fitWidth = LOOKS.hero.fitWidth;
-  BOOT_LOOK.fitHeight = LOOKS.hero.fitHeight;
+  const frameHero = (ext: { width: number; height: number }) => {
+    LOOKS.hero.fitWidth = ext.width * 1.12;
+    LOOKS.hero.fitHeight = ext.height * 3.1;
+    BOOT_LOOK.fitWidth = LOOKS.hero.fitWidth;
+    BOOT_LOOK.fitHeight = LOOKS.hero.fitHeight;
+  };
+  frameHero(f.wordmarkExtent);
+
+  // Turning a laptop window from landscape to portrait re-sets the name on two
+  // lines, which is a different block with a different extent. Re-frame from
+  // the new glyphs, and push it to a camera that is already looking at them.
+  f.onWordmark = (ext) => {
+    frameHero(ext);
+    if (document.documentElement.dataset.section === 'hero') {
+      f.setLook({ fitWidth: LOOKS.hero.fitWidth, fitHeight: LOOKS.hero.fitHeight });
+    }
+  };
+
+  // The field knows what it is running on before anything else does. Chrome
+  // that costs real fill rate — the backdrop blurs behind every card — reads
+  // this and stands down on hardware that cannot spare it.
+  document.documentElement.dataset.gpu = f.particleCount <= 384 * 384 ? 'low' : 'high';
+  document.addEventListener('field:tier', () => {
+    document.documentElement.dataset.gpu = f.particleCount <= 384 * 384 ? 'low' : 'high';
+  });
 
   // Left in deliberately: `window.__field.probe()` reads live particle
   // positions back off the GPU. Useful, and the sort of thing another
@@ -116,8 +136,8 @@ async function main() {
   if (dojoRoot) new Dojo(dojoRoot, f);
 
   // ---- the field drives on the shared ticker
+  // (it observes its own canvas for size, so there is no resize wiring here)
   ticker.add((dt, elapsed) => f.update(dt, elapsed));
-  addEventListener('resize', () => f.resize());
 
   // ---- reduced-motion escape hatch, exposed rather than hidden
   const quiet = document.querySelector<HTMLButtonElement>('#hud-quiet')!;

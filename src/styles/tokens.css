@@ -74,6 +74,17 @@
   color-scheme: dark;
 }
 
+/* Every space token above is fluid in *width*, which is the axis nobody
+   forgets. Height is the one that actually runs out: a laptop window carrying a
+   bookmarks bar and a taskbar has around 700 pixels of it, and `--bay` alone
+   was spending 192 of them on the gaps above and below the copy. Buy those
+   back before anything has to overflow to find them. */
+@media (max-height: 700px) and (min-width: 621px) {
+  :root {
+    --bay: clamp(3.5rem, 9vh, 6rem);
+  }
+}
+
 /* The site is a single committed dark environment: a black room with an
    ember-lit particle field in it. A light theme would be a different artwork.
    We honour the reduced-motion signal instead. */

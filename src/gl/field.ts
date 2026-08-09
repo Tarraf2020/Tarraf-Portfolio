@@ -77,11 +77,62 @@ export type FieldLook = {
 
 export const TIERS = [256, 384, 640, 1024] as const;
 
-function pickTier(): number {
+/**
+ * Device pixels the field is allowed to draw into, per tier.
+ *
+ * The simulation is a fixed cost, but the *draw* is not: a million additively
+ * blended sprites plus six full-screen grading passes is fill-rate work, and
+ * fill-rate is what an integrated GPU runs out of first. A denser field
+ * therefore gets a smaller frame to put itself in. Below the cap the render
+ * runs at native resolution; above it, resolution gives way before density
+ * does, because a field of glowing points survives a soft frame far better
+ * than it survives losing three quarters of its particles.
+ */
+const PIXEL_BUDGET: Record<number, number> = {
+  256: 6.4e6,
+  384: 5.4e6,
+  640: 4.2e6,
+  1024: 3.6e6,
+};
+
+/**
+ * What the GPU actually is, rather than what the CPU count implies.
+ *
+ * `hardwareConcurrency` was the whole heuristic, and it is close to useless on
+ * Windows: a thin laptop with Intel UHD graphics reports eight or sixteen
+ * threads and was handed the same million particles as a desktop with a
+ * discrete card. It ran at twenty frames until the demoter caught up, which is
+ * the first thing anyone saw of the site.
+ */
+function gpuClass(gl: WebGLRenderingContext | WebGL2RenderingContext): 'soft' | 'low' | 'mid' | 'high' | 'unknown' {
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  const name = dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) ?? '') : '';
+  if (!name) return 'unknown'; // Safari, and anything with fingerprint resistance on.
+  const r = name.toLowerCase();
+
+  // No GPU at all: a VM, a locked-down enterprise Windows image, a headless run.
+  if (/swiftshader|llvmpipe|softpipe|software|basic render|microsoft basic/.test(r)) return 'soft';
+  // Apple silicon reports through ANGLE Metal and is emphatically not low-end.
+  if (/apple m\d|metal renderer/.test(r)) return 'high';
+  if (/(rtx|radeon rx|geforce|quadro|arc a\d|apple gpu)/.test(r)) return 'high';
+  // Iris Xe and the newer Vega/Radeon Graphics parts hold a mid field.
+  if (/(iris xe|iris plus|vega|radeon graphics|adreno 7|apple a1[5-9])/.test(r)) return 'mid';
+  if (/(intel|uhd|hd graphics|mali|adreno|powervr|videocore)/.test(r)) return 'low';
+  return 'unknown';
+}
+
+function pickTier(gl: WebGLRenderingContext | WebGL2RenderingContext): number {
   const cores = navigator.hardwareConcurrency ?? 4;
   const mobile = matchMedia('(hover: none) and (pointer: coarse)').matches;
   const mem = (navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8;
-  if (mobile) return cores >= 6 ? 384 : 256;
+  const gpu = gpuClass(gl);
+
+  if (gpu === 'soft') return 256;
+  if (mobile) return gpu === 'low' || cores < 6 ? 256 : 384;
+  if (gpu === 'low') return cores >= 8 ? 384 : 256;
+  if (gpu === 'mid') return cores >= 8 ? 640 : 384;
+  if (gpu === 'high') return cores >= 8 && mem >= 8 ? 1024 : 640;
+  // Renderer masked. Fall back to the CPU signal, which is all we have.
   if (cores >= 8 && mem >= 8) return 1024;
   if (cores >= 6) return 640;
   return 384;
@@ -118,8 +169,25 @@ export class Field {
   private simSize: number;
   private tierIndex: number;
 
+  private canvas: HTMLCanvasElement;
+  /** CSS pixels of the canvas box — the only viewport measurement we trust. */
+  private viewW = 1;
+  private viewH = 1;
+  /** Resolution give, spent before particle count is. See `demote`. */
+  private dprScale = 1;
+  private resizeQueued = false;
+
   private wordPool: WordPool;
+  private wordLines: string[];
+  private wordStacked: boolean;
   private geoPool: Texture;
+
+  /**
+   * Fired when the wordmark has been re-rasterised for a viewport of a
+   * different shape. The hero framing is measured from the glyphs, so whoever
+   * owns the score has to re-measure with it.
+   */
+  onWordmark: ((extent: { width: number; height: number }) => void) | null = null;
 
   /** Measured extent of the rasterised wordmark, for framing it. */
   get wordmarkExtent(): { width: number; height: number } {
@@ -155,9 +223,12 @@ export class Field {
   fps = 60;
   private fpsAccum = 0;
   private fpsFrames = 0;
-  private demotionCooldown = 3;
+  /** Seconds to leave the quality ladder alone after a rung, and after boot. */
+  private settle = 2.5;
+  private goodSamples = 0;
 
   constructor(canvas: HTMLCanvasElement, initial: FieldLook, wordmark: string[], bars: number[]) {
+    this.canvas = canvas;
     this.renderer = new WebGLRenderer({
       canvas,
       antialias: false,
@@ -167,8 +238,6 @@ export class Field {
       depth: false,
     });
     this.renderer.setClearColor(0x000000, 1);
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-    this.renderer.setSize(innerWidth, innerHeight, false);
     // The composite pass does the sRGB encode itself; leaving the renderer in
     // linear output stops it happening twice.
     this.renderer.outputColorSpace = LinearSRGBColorSpace;
@@ -176,17 +245,24 @@ export class Field {
     const gl = this.renderer.getContext();
     this.dataType = gl.getExtension('EXT_color_buffer_float') ? FloatType : HalfFloatType;
 
-    this.simSize = pickTier();
+    this.simSize = pickTier(gl);
     this.tierIndex = TIERS.indexOf(this.simSize as (typeof TIERS)[number]);
     if (this.tierIndex < 0) this.tierIndex = TIERS.length - 1;
 
-    this.camera = new PerspectiveCamera(initial.fov, innerWidth / innerHeight, 0.1, 400);
+    const box = this.measure();
+    this.viewW = box.w;
+    this.viewH = box.h;
+    this.renderer.setPixelRatio(this.pixelRatio());
+    this.renderer.setSize(box.w, box.h, false);
 
-    // Two stacked lines on portrait; one wide line otherwise.
-    const portrait = innerWidth / innerHeight < 1;
-    this.wordPool = portrait
-      ? buildWordPool(wordmark, 14)
-      : buildWordPool([wordmark.join(' ')], 25.5);
+    this.camera = new PerspectiveCamera(initial.fov, box.w / box.h, 0.1, 400);
+
+    // Two stacked lines on portrait; one wide line otherwise. Which one is a
+    // property of the viewport, not of the session, so it is re-derived on
+    // resize rather than frozen at boot — see `relayoutWordmark`.
+    this.wordLines = wordmark;
+    this.wordStacked = box.w / box.h < 1;
+    this.wordPool = this.buildWord(this.wordStacked);
     this.geoPool = buildGeoPool();
 
     this.look = { ...initial };
@@ -255,7 +331,7 @@ export class Field {
       uniforms: {
         uPos: { value: null },
         uSize: { value: initial.size },
-        uDpr: { value: this.renderer.getPixelRatio() },
+        uScale: { value: this.spriteScale() },
         uCold: { value: this.colCold.setHex(initial.cold).clone() },
         uWarm: { value: this.colWarm.setHex(initial.warm).clone() },
         uHot: { value: this.colHot.setHex(initial.hot).clone() },
@@ -267,10 +343,95 @@ export class Field {
 
     this.posRT = [this.makeRT(), this.makeRT()];
     this.velRT = [this.makeRT(), this.makeRT()];
-    this.composer = new Composer(this.renderer);
+    const dpr = this.renderer.getPixelRatio();
+    this.composer = new Composer(this.renderer, box.w * dpr, box.h * dpr);
     this.setDensity();
     this.seed();
     this.buildPoints();
+    this.watch();
+  }
+
+  // ------------------------------------------------------------------ sizing
+
+  /**
+   * The canvas box, in CSS pixels.
+   *
+   * Deliberately *not* `innerWidth`/`innerHeight`. Those are the window, and
+   * the window is not the canvas: Windows reserves a scrollbar out of it, iOS
+   * grows and shrinks it as the URL bar hides, and a page zoom moves them
+   * apart entirely. Sizing the drawing buffer to the window while CSS sized
+   * the element to something else scaled the render on one axis only — the
+   * whole field arrived stretched, which is a thing you feel before you can
+   * name it.
+   */
+  private measure(): { w: number; h: number } {
+    const w = this.canvas.clientWidth || innerWidth;
+    const h = this.canvas.clientHeight || innerHeight;
+    return { w: Math.max(1, w), h: Math.max(1, h) };
+  }
+
+  /** Native resolution where it fits the tier's fill budget, softer where it doesn't. */
+  private pixelRatio(): number {
+    const coarse = matchMedia('(hover: none) and (pointer: coarse)').matches;
+    const cap = Math.min(devicePixelRatio || 1, coarse ? 2 : 1.75);
+    const budget = PIXEL_BUDGET[this.simSize] ?? 3.6e6;
+    const fit = Math.sqrt(budget / (this.viewW * this.viewH));
+    return clamp(Math.min(cap, fit) * this.dprScale, 0.7, cap);
+  }
+
+  /**
+   * Sprite scale, referenced to a 900-pixel-tall frame — the shape everything
+   * here was tuned against.
+   */
+  private spriteScale(): number {
+    return clamp((this.viewH * this.renderer.getPixelRatio()) / 900, 0.85, 2.6);
+  }
+
+  /** Push the current viewport through the renderer, camera and composer. */
+  private layout() {
+    const dpr = this.pixelRatio();
+    this.renderer.setPixelRatio(dpr);
+    this.renderer.setSize(this.viewW, this.viewH, false);
+    this.camera.aspect = this.viewW / this.viewH;
+    this.camera.updateProjectionMatrix();
+    this.pointsMat.uniforms.uScale!.value = this.spriteScale();
+    this.composer.resize(this.viewW * dpr, this.viewH * dpr);
+  }
+
+  /**
+   * Watch the canvas rather than the window.
+   *
+   * A ResizeObserver catches everything a resize event does and several things
+   * it doesn't: a devtools pane opening, a split-screen divider, a scrollbar
+   * appearing when the terminal releases the scroll lock. The separate
+   * resolution query catches the one case with no box change at all — dragging
+   * the window from a scaled laptop display onto an external monitor, which on
+   * Windows is the common case and left the field rendering at the old ratio.
+   */
+  private watch() {
+    new ResizeObserver(() => this.queueResize()).observe(this.canvas);
+    addEventListener('orientationchange', () => this.queueResize());
+    const watchDpr = () => {
+      matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener(
+        'change',
+        () => {
+          this.queueResize();
+          watchDpr();
+        },
+        { once: true },
+      );
+    };
+    watchDpr();
+  }
+
+  /** Coalesce a burst of observations into one reallocation, on a frame boundary. */
+  private queueResize() {
+    if (this.resizeQueued) return;
+    this.resizeQueued = true;
+    requestAnimationFrame(() => {
+      this.resizeQueued = false;
+      this.resize();
+    });
   }
 
   /**
@@ -378,21 +539,76 @@ export class Field {
     return this.tierIndex;
   }
 
-  /** Rebuild the simulation at a smaller size when we can't hold frame rate. */
-  private demote(): boolean {
-    if (this.tierIndex <= 0) return false;
-    this.tierIndex -= 1;
-    this.simSize = TIERS[this.tierIndex] as number;
-    for (const rt of [...this.posRT, ...this.velRT]) rt.dispose();
+  /**
+   * Move the simulation to a new size without losing the field.
+   *
+   * The old targets are resampled into the new ones instead of being reseeded.
+   * Reseeding was the previous behaviour and it was the worst possible answer
+   * to a dropped frame: every particle got thrown back out to the scatter
+   * shell and re-converged, so the machine that was already struggling
+   * announced it with the most violent event the site has. Resampled, the
+   * formation does not move at all — particles simply trade targets with a
+   * neighbour, which at this density is invisible.
+   */
+  private rebuildAt(size: number) {
+    const oldPos = this.posRT;
+    const oldVel = this.velRT;
+
+    this.simSize = size;
     this.posRT = [this.makeRT(), this.makeRT()];
     this.velRT = [this.makeRT(), this.makeRT()];
+
+    const live = this.flip;
+    this.blit(oldPos[live]!.texture, this.posRT[0]!);
+    this.blit(oldPos[live]!.texture, this.posRT[1]!);
+    this.blit(oldVel[live]!.texture, this.velRT[0]!);
+    this.blit(oldVel[live]!.texture, this.velRT[1]!);
+    this.flip = 0;
+
+    for (const rt of [...oldPos, ...oldVel]) rt.dispose();
+
     this.velMat.uniforms.uN!.value = this.simSize;
     this.setDensity();
-    this.seed();
     this.buildPoints();
-    this.morph = 1;
-    this.stateA = this.stateB;
     document.dispatchEvent(new CustomEvent('field:tier', { detail: this.particleCount }));
+  }
+
+  /**
+   * One rung down the quality ladder.
+   *
+   * Resolution goes first and particle count second, in that order and on
+   * purpose. A frame drawn 14% smaller is something you cannot see on a field
+   * of glowing points; a quarter of the particles disappearing is the whole
+   * piece getting thinner. Each tier drop restores full resolution, so the
+   * ladder alternates rather than shedding both at once.
+   */
+  private demote(): boolean {
+    if (this.dprScale > 0.74) {
+      this.dprScale = Math.max(0.72, this.dprScale * 0.86);
+      this.layout();
+      return true;
+    }
+    if (this.tierIndex <= 0) return false;
+    this.tierIndex -= 1;
+    this.dprScale = 1;
+    this.rebuildAt(TIERS[this.tierIndex] as number);
+    this.layout();
+    return true;
+  }
+
+  /**
+   * One rung back up, resolution only.
+   *
+   * A machine that stumbles through the first seconds — shader compilation,
+   * fonts, a browser still settling — should not be charged the particle count
+   * for it forever. Density is never restored, though: a tier that failed
+   * failed, and a field that oscillates between counts is worse than one that
+   * settled low.
+   */
+  private promote(): boolean {
+    if (this.dprScale >= 1) return false;
+    this.dprScale = Math.min(1, this.dprScale / 0.86);
+    this.layout();
     return true;
   }
 
@@ -434,12 +650,41 @@ export class Field {
   }
 
   resize() {
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-    this.renderer.setSize(innerWidth, innerHeight, false);
-    this.camera.aspect = innerWidth / innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.pointsMat.uniforms.uDpr!.value = this.renderer.getPixelRatio();
-    this.composer.resize();
+    const { w, h } = this.measure();
+    if (w === this.viewW && h === this.viewH && this.renderer.getPixelRatio() === this.pixelRatio()) {
+      return;
+    }
+    this.viewW = w;
+    this.viewH = h;
+
+    // A viewport that has changed shape needs the name set to a different
+    // shape. Rasterising is expensive, so it happens on the crossing only, not
+    // on every pixel of a window drag.
+    const stacked = w / h < 1;
+    if (stacked !== this.wordStacked) this.relayoutWordmark(stacked);
+
+    this.layout();
+  }
+
+  /** Two stacked lines on a portrait viewport, one wide line otherwise. */
+  private buildWord(stacked: boolean): WordPool {
+    return stacked
+      ? buildWordPool(this.wordLines, 14)
+      : buildWordPool([this.wordLines.join(' ')], 25.5);
+  }
+
+  private relayoutWordmark(stacked: boolean) {
+    const next = this.buildWord(stacked);
+    this.wordPool.texture.dispose();
+    this.wordPool = next;
+    this.wordStacked = stacked;
+    this.velMat.uniforms.uPoolWord!.value = next.texture;
+    this.onWordmark?.(this.wordmarkExtent);
+  }
+
+  /** CSS pixels the field occupies. Anything unprojecting into it needs these. */
+  get viewport(): { width: number; height: number } {
+    return { width: this.viewW, height: this.viewH };
   }
 
   // ------------------------------------------------------------------ update
@@ -460,14 +705,25 @@ export class Field {
     l.opacity = damp(l.opacity, g.opacity, k * 1.4, d);
     l.fov = damp(l.fov, g.fov, k, d);
 
-    // A portrait phone sees a fraction of the horizontal field a laptop does;
-    // back the camera off until the formation actually fits.
-    let goalZ = g.cam[2];
+    // A portrait phone sees a fraction of the horizontal field a laptop does,
+    // and a laptop window is usually shorter than the display it is on. Back
+    // the camera off until the formation's own extent fits the frame we have —
+    // in both axes, since a wide short window crops the top and bottom of a
+    // formation exactly as readily as a phone crops its sides.
     const halfTan = Math.tan((l.fov * Math.PI) / 360);
-    const bleed = g.bleed !== false;
-    const fitAspect = bleed ? Math.max(this.camera.aspect, 0.92) : this.camera.aspect;
+    const aspect = this.camera.aspect;
+
+    // How much of the declared width we insist on seeing. Planar formations —
+    // the stream, the lattice, the graph — are allowed to run off the sides
+    // rather than retreat to a postage stamp, but the relaxation is
+    // proportional: a 4:3 window gives up almost nothing and only a phone
+    // crops hard, where a cropped slice of something larger reads better than
+    // a whole thing too small to have a shape.
+    const contain = g.bleed === false ? 1 : clamp(aspect / 1.25, 0.46, 1);
+
+    let goalZ = g.cam[2];
     if (g.fitWidth) {
-      goalZ = Math.max(goalZ, (g.fitWidth / 2 / (halfTan * fitAspect)) * 1.06);
+      goalZ = Math.max(goalZ, ((g.fitWidth * contain) / 2 / (halfTan * aspect)) * 1.06);
     }
     if (g.fitHeight) {
       goalZ = Math.max(goalZ, (g.fitHeight / 2 / halfTan) * 1.06);
@@ -481,17 +737,24 @@ export class Field {
       const visibleHeight = 2 * goalZ * halfTan;
       // A portrait viewport gives the copy the whole lower two thirds, so the
       // formation has to sit higher to stay out from behind it.
-      goalY = -visibleHeight * (this.camera.aspect < 1 ? 0.3 : 0.26);
+      goalY = -visibleHeight * (aspect < 1 ? 0.3 : 0.26);
       goalTargetY = goalY;
     }
 
+    // Sections whose copy sits on one side stand the camera off-centre so the
+    // formation lands in the empty half. Below about 760px of width there is
+    // no empty half — every column is full-bleed by then — and the offset
+    // stops being composition and starts being a formation shoved off the
+    // edge. It fades out with the width that justified it.
+    const lateral = clamp((this.viewW - 760) / 420, 0, 1);
+
     this.camPos.set(
-      damp(this.camPos.x, g.cam[0], 2.2, d),
+      damp(this.camPos.x, g.cam[0] * lateral, 2.2, d),
       damp(this.camPos.y, goalY, 2.2, d),
       damp(this.camPos.z, goalZ, 2.2, d),
     );
     this.camTarget.set(
-      damp(this.camTarget.x, g.target[0], 2.2, d),
+      damp(this.camTarget.x, g.target[0] * lateral, 2.2, d),
       damp(this.camTarget.y, goalTargetY, 2.2, d),
       damp(this.camTarget.z, g.target[2], 2.2, d),
     );
@@ -604,17 +867,36 @@ export class Field {
   private trackPerf(dt: number) {
     this.fpsAccum += dt;
     this.fpsFrames++;
-    if (this.fpsAccum >= 0.5) {
-      this.fps = this.fpsFrames / this.fpsAccum;
-      this.fpsAccum = 0;
-      this.fpsFrames = 0;
-      this.demotionCooldown -= 0.5;
-      // Two consecutive bad half-seconds, then step down a tier. Better a
-      // smaller field at 60 than a million particles at 24.
-      if (this.fps < 42 && this.demotionCooldown <= 0) {
-        if (this.demote()) this.demotionCooldown = 4;
+    if (this.fpsAccum < 0.5) return;
+
+    this.fps = this.fpsFrames / this.fpsAccum;
+    this.fpsAccum = 0;
+    this.fpsFrames = 0;
+    this.settle = Math.max(0, this.settle - 0.5);
+    if (this.settle > 0) return;
+
+    // Better a smaller field at 60 than a million particles at 24.
+    if (this.fps < 42) {
+      this.goodSamples = 0;
+      if (this.demote()) {
+        // Half budget is not a hiccup — one rung will not catch it up, and
+        // spending four more seconds finding that out is four seconds of the
+        // reader's first impression.
+        if (this.fps < 26) this.demote();
+        this.settle = 3;
       }
+      return;
     }
+
+    if (this.fps > 57) {
+      // Four unbroken seconds of headroom before taking anything back.
+      if (++this.goodSamples >= 8) {
+        this.goodSamples = 0;
+        if (this.promote()) this.settle = 5;
+      }
+      return;
+    }
+    this.goodSamples = 0;
   }
 
   /** Read a subsample of live positions back off the GPU. Diagnostics only. */
