@@ -19,6 +19,8 @@ type Spark = { x: number; y: number; vx: number; vy: number; life: number; max: 
 
 const WINDOW = { perfect: 0.045, clean: 0.1, late: 0.17 };
 const BEST_KEY = 'dojo.best.v1';
+/** Seconds the restart input stays dead after a loss, so the card gets read. */
+const READ_LOCK = 1.5;
 
 /**
  * THE DOJO — eight limbs, eight lines of attack.
@@ -38,6 +40,8 @@ export class Dojo {
 
   private running = false;
   private inView = false;
+  private lock = 0;
+  private topBpm = 82;
 
   private score = 0;
   private best = 0;
@@ -71,6 +75,13 @@ export class Dojo {
     life: HTMLElement;
     judge: HTMLElement;
     mute: HTMLButtonElement;
+    hint: HTMLElement;
+    tag: HTMLElement;
+    rScore: HTMLElement;
+    rAcc: HTMLElement;
+    rCombo: HTMLElement;
+    rHits: HTMLElement;
+    rBpm: HTMLElement;
   };
 
   constructor(root: HTMLElement, field: Field) {
@@ -89,6 +100,13 @@ export class Dojo {
       life: root.querySelector<HTMLElement>('#dojo-life')!,
       judge: root.querySelector<HTMLElement>('#dojo-judge')!,
       mute: root.querySelector<HTMLButtonElement>('#dojo-mute')!,
+      hint: root.querySelector<HTMLElement>('#dojo-hint')!,
+      tag: root.querySelector<HTMLElement>('#dojo-result-tag')!,
+      rScore: root.querySelector<HTMLElement>('#dojo-result-score')!,
+      rAcc: root.querySelector<HTMLElement>('#dojo-result-acc')!,
+      rCombo: root.querySelector<HTMLElement>('#dojo-result-combo')!,
+      rHits: root.querySelector<HTMLElement>('#dojo-result-hits')!,
+      rBpm: root.querySelector<HTMLElement>('#dojo-result-bpm')!,
     };
 
     this.best = Number(localStorage.getItem(BEST_KEY) ?? 0) || 0;
@@ -150,6 +168,8 @@ export class Dojo {
   // ------------------------------------------------------------------- rounds
 
   private begin() {
+    // A loss holds the board for a beat — a reflex tap on space must not eat the card.
+    if (this.lock > 0 || this.running) return;
     this.strikes = [];
     this.sparks = [];
     this.score = 0;
@@ -159,6 +179,7 @@ export class Dojo {
     this.hits = 0;
     this.attempts = 0;
     this.bpm = 82;
+    this.topBpm = 82;
     this.spawned = 0;
     this.spawnClock = 0.35;
     this.elapsed = 0;
@@ -166,23 +187,57 @@ export class Dojo {
     this.judgeText = '';
     this.el.overlay.dataset.state = 'playing';
     this.el.start.querySelector('span')!.textContent = 'Begin round';
+    this.el.judge.innerHTML = '&nbsp;';
     this.sync();
   }
 
   private finish(silent = false) {
     this.running = false;
-    this.el.overlay.dataset.state = 'over';
-    if (this.score > this.best) {
+    const record = this.score > this.best;
+    if (record) {
       this.best = this.score;
       localStorage.setItem(BEST_KEY, String(this.best));
       this.el.best.textContent = this.best.toLocaleString();
       this.el.best.dataset.fresh = 'true';
     }
     this.el.start.querySelector('span')!.textContent = 'Again';
-    if (!silent) {
-      this.kit.bell();
-      this.el.judge.textContent = `round over · best combo ×${Math.max(1, this.bestCombo)}`;
+
+    // Scrolling away is not a result worth reading — go straight back to idle.
+    if (silent) {
+      this.lock = 0;
+      this.el.overlay.dataset.state = 'idle';
+      this.el.overlay.dataset.locked = 'false';
+      this.setHint('strike');
+      return;
     }
+
+    this.kit.bell();
+    this.el.judge.textContent = `round over · best combo ×${Math.max(1, this.bestCombo)}`;
+    this.fillCard(record);
+    this.el.overlay.dataset.state = 'over';
+    this.lock = READ_LOCK;
+    this.el.overlay.dataset.locked = 'true';
+    this.setHint('reading');
+    this.sync();
+  }
+
+  private fillCard(record: boolean) {
+    this.el.tag.textContent = record ? 'new personal best' : 'round over';
+    this.el.tag.dataset.record = String(record);
+    this.el.rScore.textContent = this.score.toLocaleString();
+    this.el.rAcc.textContent = this.attempts ? `${Math.round((this.hits / this.attempts) * 100)}%` : '—';
+    this.el.rCombo.textContent = `×${1 + Math.min(9, Math.floor(this.bestCombo / 4))}`;
+    this.el.rHits.textContent = `${this.hits}/${this.attempts}`;
+    this.el.rBpm.textContent = String(Math.round(this.topBpm));
+  }
+
+  private setHint(mode: 'strike' | 'reading' | 'again') {
+    const html = {
+      strike: 'strike with <kbd>space</kbd>, <kbd>click</kbd> or <kbd>tap</kbd>',
+      reading: 'hold — reading the round',
+      again: '<kbd>space</kbd> or <kbd>tap</kbd> to go again',
+    };
+    this.el.hint.innerHTML = html[mode];
   }
 
   private get multiplier() {
@@ -292,11 +347,22 @@ export class Dojo {
     if (!this.inView) return;
     const d = Math.min(dt, 1 / 30);
 
+    if (this.lock > 0) {
+      this.lock -= d;
+      if (this.lock <= 0) {
+        this.lock = 0;
+        this.el.overlay.dataset.locked = 'false';
+        this.setHint('again');
+        this.el.start.focus({ preventScroll: true });
+      }
+    }
+
     if (this.running) {
       this.elapsed += d;
 
       // Tempo climbs, so the ceiling is reflex rather than patience.
       this.bpm = Math.min(168, 82 + this.elapsed * 3.4);
+      this.topBpm = Math.max(this.topBpm, this.bpm);
       const beat = 60 / this.bpm;
 
       this.spawnClock -= d;

@@ -89,6 +89,78 @@
   text-transform: none;
   letter-spacing: 0.08em;
   text-align: center;
+  transition: opacity var(--dur-fast);
+}
+
+/* ---- round card: only present once a round has actually ended */
+
+.dojo__card {
+  display: none;
+  width: min(62%, 22rem);
+  text-align: center;
+}
+.dojo__overlay[data-state='over'] .dojo__card {
+  display: block;
+  animation: dojo-card 0.5s var(--ease-out) both;
+}
+@keyframes dojo-card {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.dojo__card-tag {
+  color: var(--mute-200);
+  font-size: var(--step--2);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.dojo__card-tag[data-record='true'] {
+  color: var(--signal);
+}
+.dojo__card-score {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 0.35rem 0 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.dojo__card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem 1.2rem;
+  font-size: var(--step--2);
+  text-align: left;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 0.8rem;
+}
+.dojo__card-grid div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.dojo__card-grid dt {
+  color: var(--mute-200);
+  letter-spacing: 0.1em;
+}
+.dojo__card-grid dd {
+  color: var(--bone-300);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Held for a beat after a loss, so the result is read, not skipped past. */
+.dojo__overlay[data-locked='true'] .btn,
+.dojo__overlay[data-locked='true'] .dojo__rules {
+  opacity: 0.32;
+  pointer-events: none;
 }
 
 .dojo__panel {

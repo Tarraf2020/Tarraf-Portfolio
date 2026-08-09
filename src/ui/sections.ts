@@ -260,12 +260,22 @@ const dojo = () => `
     <div class="dojo" data-reveal>
       <div class="dojo__stage">
         <canvas id="dojo-canvas" width="720" height="720" aria-label="The Dojo, a timing game"></canvas>
-        <div class="dojo__overlay" id="dojo-overlay">
+        <div class="dojo__overlay" id="dojo-overlay" data-state="idle">
+          <div class="dojo__card" id="dojo-result" aria-live="polite">
+            <p class="dojo__card-tag mono" id="dojo-result-tag">round over</p>
+            <p class="dojo__card-score display" id="dojo-result-score">0</p>
+            <dl class="dojo__card-grid mono">
+              <div><dt>accuracy</dt><dd id="dojo-result-acc">—</dd></div>
+              <div><dt>best combo</dt><dd id="dojo-result-combo">—</dd></div>
+              <div><dt>landed</dt><dd id="dojo-result-hits">—</dd></div>
+              <div><dt>top tempo</dt><dd id="dojo-result-bpm">—</dd></div>
+            </dl>
+          </div>
           <button class="btn btn--primary" id="dojo-start">
             <span>Begin round</span>
             <kbd>space</kbd>
           </button>
-          <p class="dojo__rules mono">
+          <p class="dojo__rules mono" id="dojo-hint">
             strike with <kbd>space</kbd>, <kbd>click</kbd> or <kbd>tap</kbd>
           </p>
         </div>
