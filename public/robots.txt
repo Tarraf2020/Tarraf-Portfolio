@@ -1,5 +1,21 @@
-# alitarraf.dev — one page, all of it public.
+# alitarraf.dev — one page, all of it public, including for AI agents.
+# Static summary lives in the HTML body and in /llms.txt.
 User-agent: *
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
 Allow: /
 
 Sitemap: https://alitarraf.dev/sitemap.xml

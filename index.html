@@ -114,18 +114,15 @@
     <canvas id="field" aria-hidden="true"></canvas>
     <div class="atmos" aria-hidden="true"></div>
 
-    <!-- Boot sequence: real work happens behind this, not a fake progress bar. -->
-    <div id="boot" aria-live="polite">
+    <!-- Boot sequence: real work happens behind this, not a fake progress bar.
+         It dismisses itself as soon as the field is ready — no click needed. -->
+    <div id="boot" aria-hidden="true">
       <div class="boot__inner">
         <div class="boot__mark mono">ali.tarraf</div>
         <ol class="boot__log" id="boot-log"></ol>
         <div class="boot__bar"><i id="boot-bar"></i></div>
         <div class="boot__meta mono"><span id="boot-pct">0%</span><span id="boot-note">initialising</span></div>
       </div>
-      <button id="boot-enter" class="boot__enter" hidden>
-        <span class="boot__enter-label">Enter the field</span>
-        <span class="boot__enter-hint mono">1,048,576 particles standing by</span>
-      </button>
     </div>
 
     <!-- Fixed chrome -->
@@ -215,7 +212,38 @@
 
     <!-- Scroll machinery: real page height lives here, rendering happens in #content. -->
     <div id="spacer" aria-hidden="true"></div>
-    <main id="content"></main>
+    <!-- Static summary for crawlers, AI agents and no-JS readers.
+         The interactive build replaces this with the full experience on boot. -->
+    <main id="content">
+      <section id="hero">
+        <p>Beirut, Lebanon · Open to senior roles</p>
+        <h1>Ali Tarraf — Senior Software Engineer</h1>
+        <p>Frontend Architecture for multi-tenant SaaS. I build the layer that has to hold when the product doubles.</p>
+        <ul>
+          <li>1,000,000+ users reached</li>
+          <li>5+ years shipping</li>
+          <li>50+ PRs reviewed / month</li>
+        </ul>
+      </section>
+      <section id="work">
+        <h2>Work history</h2>
+        <ul>
+          <li>Sowlutions Inc — Senior Software Engineer (2024–2026): frontend team lead of 3; Haqq.ai legal platform, 50+ companies, 120,000 users; Vue, Nuxt 3 SSR, TypeScript.</li>
+          <li>Skeldus — Frontend Engineer (2023–2024): cybersecurity SaaS dashboards, React, Next.js; +25% reliability.</li>
+          <li>Numbase Group — Frontend Engineer (2022–2023): real-time systems, Socket.io; −40% latency.</li>
+          <li>Docclik — Full-Stack Web Developer (2021–2022): healthcare scheduling across Canada; −40% load time.</li>
+        </ul>
+      </section>
+      <section id="contact">
+        <h2>Contact</h2>
+        <p>
+          <a href="mailto:ali.tarraf2017@gmail.com">ali.tarraf2017@gmail.com</a> ·
+          <a href="https://linkedin.com/in/ali-tarraf-730b9a171">LinkedIn</a> ·
+          <a href="https://github.com/Tarraf2020">GitHub</a> ·
+          <a href="./ali-tarraf-resume.pdf">Résumé (PDF)</a>
+        </p>
+      </section>
+    </main>
 
     <div id="cursor" aria-hidden="true"><i></i><b></b></div>
 

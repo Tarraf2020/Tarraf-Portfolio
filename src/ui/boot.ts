@@ -15,7 +15,6 @@ export class Boot {
   private bar = document.querySelector<HTMLElement>('#boot-bar')!;
   private pct = document.querySelector<HTMLElement>('#boot-pct')!;
   private note = document.querySelector<HTMLElement>('#boot-note')!;
-  private enter = document.querySelector<HTMLButtonElement>('#boot-enter')!;
 
   private done = 0;
   private total = 0;
@@ -44,25 +43,7 @@ export class Boot {
     this.note.textContent = 'ready';
   }
 
-  /** Resolves when the reader chooses to enter — never auto-dismisses. */
-  async waitForEnter(hint: string): Promise<void> {
-    this.enter.querySelector<HTMLElement>('.boot__enter-hint')!.textContent = hint;
-    this.enter.hidden = false;
-    this.enter.focus({ preventScroll: true });
-
-    await new Promise<void>((resolve) => {
-      const go = (e?: Event) => {
-        if (e instanceof KeyboardEvent && e.code !== 'Enter' && e.code !== 'Space') return;
-        e?.preventDefault();
-        this.enter.removeEventListener('click', go);
-        removeEventListener('keydown', go);
-        resolve();
-      };
-      this.enter.addEventListener('click', go);
-      addEventListener('keydown', go);
-    });
-  }
-
+  /** The gate is gone: boot is a loader, not a door. Dismissal is automatic. */
   dismiss() {
     document.body.dataset.booting = 'false';
     setTimeout(() => this.root.remove(), 1200);

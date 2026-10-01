@@ -1,0 +1,54 @@
+# Ali Tarraf — alitarraf.dev
+
+> Senior Software Engineer specialising in frontend architecture for
+> multi-tenant SaaS platforms serving 1,000,000+ users. React, Next.js, Vue,
+> Nuxt, TypeScript. Beirut, Lebanon. Open to senior roles.
+
+- URL: https://alitarraf.dev/
+- Email: ali.tarraf2017@gmail.com
+- LinkedIn: https://linkedin.com/in/ali-tarraf-730b9a171
+- GitHub: https://github.com/Tarraf2020
+- Résumé (PDF): https://alitarraf.dev/ali-tarraf-resume.pdf
+- Sitemap: https://alitarraf.dev/sitemap.xml
+
+## Summary
+
+Five+ years shipping SaaS platforms that outlive the sprint that made them.
+Frontend architecture, multi-tenant systems, SSR at scale, design systems,
+technical leadership and mentoring.
+
+## Work history
+
+- Sowlutions Inc (2024–2026) — Senior Software Engineer, Lebanon. Led a
+  frontend team of 3; owned Haqq.ai, a multi-tenant legal platform with 6
+  business modules serving 50+ companies and 120,000 users. Vue, Nuxt 3 SSR,
+  TypeScript, Docker, CI/CD.
+- Skeldus (2023–2024) — Frontend Engineer, Remote/New York. Cybersecurity and
+  compliance SaaS dashboards (13+ interfaces). React, Next.js. +25% reliability.
+- Numbase Group (2022–2023) — Frontend Engineer, Remote/Qatar. Real-time chat
+  and notifications with Socket.io; architecture rewrite, −40% latency.
+- Docclik (2021–2022) — Full-Stack Web Developer, Remote/Canada. Healthcare
+  scheduling for thousands of practitioners; −40% load time, +30% scheduling
+  efficiency.
+- Codi Tech (2021) — Boot Camp Full-Stack Developer. ERP and medical
+  management system on the MERN stack.
+
+## Stack
+
+Frontend: React, Next.js, Vue.js, Nuxt.js, TypeScript, JavaScript, HTML5, CSS3,
+Tailwind CSS, Ant Design. Backend: Node.js, Express.js, NestJS, SQL,
+PostgreSQL, MongoDB. DevOps: Docker, CI/CD, Nginx, Caddy, VPS deployment.
+Architecture: design patterns, SSR, responsive design, code reviews, Agile.
+AI: AI-assisted architecture analysis, AI dev workflows, custom agents.
+
+## Sections on the page
+
+Manifesto, Scale, Architecture, Work, Impact, Stack, The Dojo, Beyond, Contact.
+An interactive ⌘K terminal on the site answers questions about Ali's work —
+type `help` in it.
+
+## About this page
+
+The hero is an interactive WebGL particle field: one particle per user served
+(~1M). Crawlers and readers without JavaScript get the same words as static
+HTML in the document body plus the JSON-LD `Person` block.

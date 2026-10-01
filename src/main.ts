@@ -36,28 +36,24 @@ async function main() {
 
   await boot.run([
     {
-      label: 'load typefaces',
-      // The wordmark is rasterised from real type. Sampling a fallback face
-      // would spell the name in the wrong shape, so this has to land first.
-      //
-      // But it must not be able to land *never*. This step runs before the one
-      // that renders the copy, so anything that leaves it pending or rejected
-      // takes the whole document with it — a blank page for a reader and, worse,
-      // nothing at all for a crawler, since every word on this site arrives by
-      // script. Google Fonts being slow is the likeliest cause and the one we
-      // can least control. After three seconds the wordmark gets whatever face
-      // is available, which is a far cheaper loss than the page.
-      run: () =>
-        Promise.race([
-          document.fonts.ready.then(() => document.fonts.load('700 340px "Inter Tight"')),
-          new Promise((resolve) => setTimeout(resolve, 3000)),
-        ]).catch(() => {}),
-    },
-    {
       label: 'render document',
       run: () => {
         content.innerHTML = renderSections();
       },
+    },
+    {
+      label: 'load typefaces',
+      // The wordmark is rasterised from real type. Sampling a fallback face
+      // would spell the name in the wrong shape, so the field waits for it.
+      //
+      // But it must not wait *forever*: content is already painted by now, so
+      // a slow Google Fonts is a cosmetic loss, not a blank page. After two
+      // seconds the wordmark gets whatever face is available.
+      run: () =>
+        Promise.race([
+          document.fonts.ready.then(() => document.fonts.load('700 340px "Inter Tight"')),
+          new Promise((resolve) => setTimeout(resolve, 2000)),
+        ]).catch(() => {}),
     },
     {
       label: 'trace coastlines',
@@ -170,9 +166,10 @@ async function main() {
 
   ticker.start();
 
-  // ---- hand over
+  // ---- hand over: no gate, the field assembles itself on arrival.
+  // A brief lock lets the intro wave play without scroll fighting it;
+  // the reader is never asked to click.
   director.lock(true);
-  await boot.waitForEnter(`${f.particleCount.toLocaleString()} particles standing by`);
   boot.dismiss();
 
   // The seed cloud has been drifting behind the boot panel with almost no
