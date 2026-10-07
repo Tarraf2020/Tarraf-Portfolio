@@ -339,6 +339,7 @@ export class Dojo {
     this.el.bpm.textContent = this.running ? String(Math.round(this.bpm)) : '—';
     const pips = this.el.life.querySelectorAll('i');
     pips.forEach((p, i) => p.setAttribute('data-lit', String(i < this.guard)));
+    this.el.life.setAttribute('aria-label', `Guard remaining: ${this.guard} of ${pips.length}`);
   }
 
   // -------------------------------------------------------------------- frame

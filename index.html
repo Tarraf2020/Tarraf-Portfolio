@@ -99,12 +99,50 @@
     </script>
 
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Self-hosted, latin subset. The Google Fonts stylesheet was render-
+         blocking and cost two extra origins before a single glyph could paint.
+         Inter Tight and Inter are preloaded because the hero is set in them and
+         the boot waits on Inter Tight 700 to rasterise the wordmark. -->
+    <link rel="preload" href="./fonts/inter-tight.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="./fonts/inter.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      @font-face {
+        font-family: 'Inter Tight';
+        font-weight: 400 700;
+        font-display: swap;
+        src: url(./fonts/inter-tight.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-weight: 400 600;
+        font-display: swap;
+        src: url(./fonts/inter.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        font-weight: 400 700;
+        font-display: swap;
+        src: url(./fonts/jetbrains-mono.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'Instrument Serif';
+        font-weight: 400;
+        font-display: swap;
+        src: url(./fonts/instrument-serif.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'Instrument Serif';
+        font-style: italic;
+        font-weight: 400;
+        font-display: swap;
+        src: url(./fonts/instrument-serif-italic.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+    </style>
   </head>
 
   <body data-booting="true">
@@ -127,9 +165,11 @@
 
     <!-- Fixed chrome -->
     <header id="topbar">
-      <a class="topbar__mark" href="#hero" aria-label="Ali Tarraf, back to top">
-        <span class="topbar__glyph">AT</span>
-        <span class="topbar__name">Ali Tarraf</span>
+      <!-- Named by its own text, not an aria-label: a label that doesn't contain
+           the visible words breaks voice control ("click Ali Tarraf"). -->
+      <a class="topbar__mark" href="#hero">
+        <span class="topbar__glyph" aria-hidden="true">AT</span>
+        <span class="topbar__name">Ali Tarraf</span><span class="sr">, back to top</span>
       </a>
       <div class="topbar__mid mono" id="section-label">00 / Top</div>
       <button class="topbar__cmd mono" id="cmd-open" aria-haspopup="dialog">

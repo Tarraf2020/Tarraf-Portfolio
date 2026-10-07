@@ -4,12 +4,14 @@
 > multi-tenant SaaS platforms serving 1,000,000+ users. React, Next.js, Vue,
 > Nuxt, TypeScript. Beirut, Lebanon. Open to senior roles.
 
-- URL: https://alitarraf.dev/
-- Email: ali.tarraf2017@gmail.com
-- LinkedIn: https://linkedin.com/in/ali-tarraf-730b9a171
-- GitHub: https://github.com/Tarraf2020
-- Résumé (PDF): https://alitarraf.dev/ali-tarraf-resume.pdf
-- Sitemap: https://alitarraf.dev/sitemap.xml
+## Links
+
+- [Site](https://alitarraf.dev/): the interactive portfolio
+- [Email](mailto:ali.tarraf2017@gmail.com): ali.tarraf2017@gmail.com
+- [LinkedIn](https://linkedin.com/in/ali-tarraf-730b9a171): professional profile
+- [GitHub](https://github.com/Tarraf2020): code
+- [Résumé (PDF)](https://alitarraf.dev/ali-tarraf-resume.pdf): full CV
+- [Sitemap](https://alitarraf.dev/sitemap.xml)
 
 ## Summary
 

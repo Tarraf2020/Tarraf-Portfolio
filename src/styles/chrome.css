@@ -98,9 +98,17 @@ body[data-booting='false'] #topbar {
   #topbar {
     grid-template-columns: 1fr auto;
   }
-  .topbar__name,
   .topbar__mid {
     display: none;
+  }
+  /* Hidden from sight only: it is the link's accessible name. Same as `.sr`. */
+  .topbar__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .topbar__cmd span {
     display: none;

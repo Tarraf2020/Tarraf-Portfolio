@@ -697,7 +697,8 @@
   text-align: left;
 }
 .foot p {
-  color: var(--mute-200);
+  /* mute-200 is 2.7:1 on ink at this size; mute-100 clears AA. */
+  color: var(--mute-100);
   text-transform: none;
   letter-spacing: 0.05em;
   line-height: 1.7;

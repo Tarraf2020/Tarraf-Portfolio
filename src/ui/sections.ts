@@ -302,7 +302,7 @@ const dojo = () => `
           <span class="mono">personal best</span>
           <b id="dojo-best">0</b>
         </div>
-        <div class="dojo__life" id="dojo-life" aria-label="Guard remaining">
+        <div class="dojo__life" id="dojo-life" role="img" aria-label="Guard remaining: 3 of 3">
           <i></i><i></i><i></i>
         </div>
         <p class="dojo__judge mono" id="dojo-judge">&nbsp;</p>
