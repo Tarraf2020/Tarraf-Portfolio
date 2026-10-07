@@ -145,7 +145,7 @@ const work = () => `
 <section class="sec sec--work" id="work" data-formation="stream">
   <div class="wrap wrap--wide">
     ${eyebrow('04', 'Work')}
-    <h2 class="sec__title display" data-reveal>Five years,<br />four products, one craft.</h2>
+    <h2 class="sec__title display" data-reveal>Five years,<br />five products, one craft.</h2>
 
     <ol class="roles">
       ${roles

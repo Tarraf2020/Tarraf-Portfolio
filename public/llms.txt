@@ -21,6 +21,10 @@ technical leadership and mentoring.
 
 ## Work history
 
+- SoftMind (2026–present) — Senior Software Engineer, Lebanon. Regional SaaS
+  ERP provider (est. 1996) serving 1,500+ companies across 8 countries:
+  SoftOffice ERP, SM RetaileR POS, SM HR and SM BrokerS insurance brokerage.
+  Finance, inventory, production, payroll and claims workflows.
 - Sowlutions Inc (2024–2026) — Senior Software Engineer, Lebanon. Led a
   frontend team of 3; owned Haqq.ai, a multi-tenant legal platform with 6
   business modules serving 50+ companies and 120,000 users. Vue, Nuxt 3 SSR,

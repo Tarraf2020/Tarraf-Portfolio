@@ -149,6 +149,36 @@ export type Role = {
 
 export const roles: Role[] = [
   {
+    id: "softmind",
+    company: "SoftMind",
+    title: "Senior Software Engineer",
+    place: "Lebanon",
+    from: "06 / 2026",
+    to: "Now",
+    fromYear: 2026,
+    toYear: 2026,
+    current: true,
+    headline:
+      "Engineering on a regional SaaS ERP suite used by 1,500+ companies across 8 countries.",
+    bullets: [
+      "Building and evolving features across SoftMind's product suite — SoftOffice ERP, SM RetaileR POS, SM HR and SM BrokerS.",
+      "Working on enterprise workflows spanning finance, inventory, production, payroll, attendance, and insurance policy and claims management.",
+      "Shipping for organisations ranging from small teams to 4,000+ employees, on systems handling millions of transactions.",
+      "Modernising the cloud delivery of a 30-year-old regional software house — frontend architecture, UX consistency and code quality across products.",
+    ],
+    stack: [
+      "TypeScript",
+      "React",
+      "React-Native",
+      "Node.js",
+      "express.js",
+      "SQLAnywhere",
+      "ERP",
+      "SaaS",
+      "Multi-tenant",
+    ],
+  },
+  {
     id: "sowlutions",
     company: "Sowlutions Inc",
     title: "Senior Software Engineer",
@@ -157,7 +187,6 @@ export const roles: Role[] = [
     to: "05 / 2026",
     fromYear: 2024,
     toYear: 2026,
-    current: true,
     headline:
       "Led a frontend team of 3 across multiple SaaS products, and owned the architecture of a platform serving 120,000 users.",
     bullets: [

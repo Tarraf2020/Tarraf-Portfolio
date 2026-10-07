@@ -203,7 +203,7 @@ const neofetch: Cmd = {
       [...kv('viewport', `${innerWidth}×${innerHeight} @${devicePixelRatio}x`, 'bone', 11)],
       [...kv('uptime', uptime(performance.now() - ctx.bootedAt), 'bone', 11)],
       [['  ' + '─'.repeat(38), 'dim']],
-      [...kv('experience', '5+ years · 5 roles · 4 countries', 'bone', 11)],
+      [...kv('experience', '5+ years · 6 roles · 4 countries', 'bone', 11)],
       [...kv('reached', `${fmt(1_000_000)}+ users`, 'bone', 11)],
       [...kv('palette', '', 'bone', 11), fill(3, 'em'), [' '], fill(3, 'vio'), [' '], fill(3, 'sig'), [' '], fill(3, 'bone')],
     ];
